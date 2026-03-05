@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Consorti - Relatórios</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="assets/css/style.css">
+    <style>
+        .sidebar {
+            min-height: 100vh;
+            background: linear-gradient(180deg, #0d6efd 0%, #0a58ca 100%);
+            color: white;
+        }
+
+        .sidebar .nav-link {
+            color: rgba(255, 255, 255, 0.9);
+            padding: 0.75rem 1rem;
+            border-radius: 0.5rem;
+            margin: 0.25rem 0;
+        }
+
+        .sidebar .nav-link:hover,
+        .sidebar .nav-link.active {
+            background: rgba(255, 255, 255, 0.15);
+            color: white;
+        }
+
+        .sidebar .nav-link i {
+            margin-right: 0.5rem;
+            width: 20px;
+            text-align: center;
+        }
+
+        .report-card {
+            cursor: pointer;
+            transition: all 0.2s;
+            border: 2px solid transparent;
+        }
+
+        .report-card:hover {
+            border-color: #0d6efd;
+            transform: translateY(-2px);
+        }
+
+        .report-card.selected {
+            border-color: #0d6efd;
+            background: #f0f7ff;
+        }
+
+        #loading {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(255, 255, 255, 0.9);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+        }
+
+        .profit-positive {
+            color: #198754;
+            font-weight: 600;
+        }
+
+        .profit-negative {
+            color: #dc3545;
+            font-weight: 600;
+        }
+
+        .discount-text {
+            color: #dc3545;
+        }
+
+        @media print {
+
+            .sidebar,
+            .no-print {
+                display: none !important;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div id="loading">
+        <div class="text-center">
+            <div class="spinner-border text-primary" role="status"></div>
+            <p class="mt-2 mb-0">Carregando...</p>
+        </div>
+    </div>
+
+    <div class="container-fluid">
+        <div class="row">
+            <nav class="col-md-3 col-lg-2 d-md-block sidebar collapse show">
+                <div class="position-sticky pt-3 px-2">
+                    <div class="text-center mb-4 pb-3 border-bottom border-light">
+                        <i class="bi bi-box-seam" style="font-size: 2rem;"></i>
+                        <h5 class="mt-2 mb-0">Consorti</h5>
+                        <small class="text-white-50">Gestão Local</small>
+                    </div>
+                    <ul class="nav flex-column">
+                        <li class="nav-item"><a class="nav-link" href="dashboard.html"><i
+                                    class="bi bi-speedometer2"></i> Dashboard</a></li>
+                        <li class="nav-item"><a class="nav-link" href="estoque.html"><i class="bi bi-search"></i>
+                                Consultar Estoque</a></li>
+                        <li class="nav-item"><a class="nav-link" href="pdv.html"><i class="bi bi-cart"></i> PDV /
+                                Vendas</a></li>
+                        <li class="nav-item"><a class="nav-link" href="entrada.html"><i
+                                    class="bi bi-arrow-down-circle"></i> Entrada de Estoque</a></li>
+                        <li class="nav-item"><a class="nav-link active" href="relatorios.html"><i
+                                    class="bi bi-bar-chart"></i> Relatórios</a></li>
+                        <li class="nav-item"><a class="nav-link" href="vendedores.html"><i class="bi bi-people"></i>
+                                Vendedores</a></li>
+                        <li class="nav-item mt-4 pt-3 border-top border-light"><a class="nav-link" href="config.html"><i
+                                    class="bi bi-gear"></i> Configurações</a></li>
+                        <li class="nav-item"><a class="nav-link text-danger" href="#"
+                                onclick="Auth.logout(); return false;"><i class="bi bi-box-arrow-left"></i> Sair</a>
+                        </li>
+                    </ul>
+                    <div class="mt-4 px-2">
+                        <div class="card bg-white text-dark">
+                            <div class="card-body py-2 px-3"><small class="text-muted">Logado como:</small>
+                                <div id="userInfo" class="fw-semibold text-truncate"></div><small class="text-muted"
+                                    id="userNivel"></small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </nav>
+
+            <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4 py-4">
+                <div
+                    class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-3 mb-4 border-bottom">
+                    <h1 class="h3 mb-0">📊 Relatórios Gerenciais</h1>
+                    <button class="btn btn-sm btn-outline-secondary no-print" onclick="window.print()"><i
+                            class="bi bi-printer"></i> Imprimir</button>
+                </div>
+
+                <div class="row g-4 mb-4 no-print">
+                    <div class="col-md-3">
+                        <div class="card report-card" onclick="carregarRelatorio('dashboard')">
+                            <div class="card-body text-center"><i class="bi bi-speedometer2 text-primary"
+                                    style="font-size: 2rem;"></i>
+                                <h6 class="mt-2 mb-0">Dashboard Geral</h6><small class="text-muted">Visão
+                                    completa</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card report-card" onclick="carregarRelatorio('estoque_baixo')">
+                            <div class="card-body text-center"><i class="bi bi-exclamation-triangle text-warning"
+                                    style="font-size: 2rem;"></i>
+                                <h6 class="mt-2 mb-0">Estoque Baixo</h6><small class="text-muted">Produtos
+                                    críticos</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card report-card" onclick="carregarRelatorio('produtos_mais_vendidos')">
+                            <div class="card-body text-center"><i class="bi bi-trophy text-success"
+                                    style="font-size: 2rem;"></i>
+                                <h6 class="mt-2 mb-0">Mais Vendidos</h6><small class="text-muted">Top produtos</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card report-card" onclick="carregarRelatorio('resumo_estoque')">
+                            <div class="card-body text-center"><i class="bi bi-box-seam text-info"
+                                    style="font-size: 2rem;"></i>
+                                <h6 class="mt-2 mb-0">Resumo Estoque</h6><small class="text-muted">Valores e
+                                    lucros</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card report-card" onclick="carregarRelatorio('vendas_periodo')">
+                            <div class="card-body text-center"><i class="bi bi-calendar-check text-primary"
+                                    style="font-size: 2rem;"></i>
+                                <h6 class="mt-2 mb-0">Vendas por Período</h6><small class="text-muted">Evolução
+                                    temporal</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card report-card" onclick="carregarRelatorio('receita_periodo')">
+                            <div class="card-body text-center"><i class="bi bi-cash-coin text-success"
+                                    style="font-size: 2rem;"></i>
+                                <h6 class="mt-2 mb-0">Receita e Lucro</h6><small class="text-muted">Resultados
+                                    financeiros</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card report-card" onclick="carregarRelatorio('ranking_lucro')">
+                            <div class="card-body text-center"><i class="bi bi-graph-up-arrow text-info"
+                                    style="font-size: 2rem;"></i>
+                                <h6 class="mt-2 mb-0">Ranking de Lucro</h6><small class="text-muted">Por produto</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card report-card" onclick="carregarRelatorio('descontos')">
+                            <div class="card-body text-center"><i class="bi bi-percent text-warning"
+                                    style="font-size: 2rem;"></i>
+                                <h6 class="mt-2 mb-0">Descontos</h6><small class="text-muted">Controle de
+                                    descontos</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <span id="relatorioTitulo"><i class="bi bi-bar-chart"></i> Selecione um relatório</span>
+                        <div id="relatorioFiltros" class="d-none">
+                            <input type="date" class="form-control form-control-sm d-inline-block" id="dataInicio"
+                                style="width: auto;">
+                            <span class="mx-2">até</span>
+                            <input type="date" class="form-control form-control-sm d-inline-block" id="dataFim"
+                                style="width: auto;">
+                            <button class="btn btn-sm btn-primary ms-2" onclick="carregarRelatorioAtual()"><i
+                                    class="bi bi-search"></i> Filtrar</button>
+                        </div>
+                    </div>
+                    <div class="card-body" id="relatorioConteudo">
+                        <div class="text-center text-muted py-5"><i class="bi bi-bar-chart"
+                                style="font-size: 4rem;"></i>
+                            <p class="mt-3">Selecione um relatório acima para visualizar</p>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="assets/js/api.js"></script>
+    <script src="assets/js/auth.js"></script>
+    <script>
+        if (!Auth.requerLogin()) {}
+        let relatorioAtual = null;
+
+        // === Funções auxiliares para conversão segura de números ===
+        const num = (val) => {
+            if (val === null || val === undefined || val === '') return 0;
+            const n = parseFloat(val);
+            return isNaN(n) ? 0 : n;
+        };
+        const money = (val) => `R$ ${num(val).toFixed(2).replace('.', ',')}`;
+        const percent = (val) => `${num(val).toFixed(1)}%`;
+
+        document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('loading').classList.add('d-none');
+            const user = Auth.getUsuario();
+            if (user) {
+                document.getElementById('userInfo').textContent = user.nome;
+                document.getElementById('userNivel').textContent = user.nivel === 'admin' ? '👑 Administrador' : user.nivel === 'vendedor' ? '👤 Vendedor' : '👤 Cliente';
+            }
+            const urlParams = new URLSearchParams(window.location.search);
+            const tipo = urlParams.get('tipo');
+            if (tipo) carregarRelatorio(tipo);
+        });
+
+        async function carregarRelatorio(tipo) {
+            relatorioAtual = tipo;
+            document.getElementById('loading').classList.remove('d-none');
+
+            const titulos = {
+                'dashboard': 'Dashboard Geral', 'estoque_baixo': 'Estoque Baixo', 'produtos_mais_vendidos': 'Produtos Mais Vendidos',
+                'resumo_estoque': 'Resumo de Estoque', 'vendas_periodo': 'Vendas por Período', 'receita_periodo': 'Receita e Lucro',
+                'produtos_marca': 'Produtos por Marca', 'movimentacoes_usuario': 'Movimentações por Usuário',
+                'ranking_lucro': 'Ranking de Lucro por Produto', 'descontos': 'Descontos Concedidos'
+            };
+            document.getElementById('relatorioTitulo').innerHTML = `<i class="bi bi-bar-chart"></i> ${titulos[tipo] || tipo}`;
+
+            const filtrosRelatorio = ['vendas_periodo', 'receita_periodo', 'movimentacoes_usuario', 'ranking_lucro', 'descontos'];
+            if (filtrosRelatorio.includes(tipo)) {
+                document.getElementById('relatorioFiltros').classList.remove('d-none');
+                document.getElementById('dataInicio').value = new Date().toISOString().split('T')[0].slice(0, 7) + '-01';
+                document.getElementById('dataFim').value = new Date().toISOString().split('T')[0];
+            } else {
+                document.getElementById('relatorioFiltros').classList.add('d-none');
+            }
+
+            try {
+                const params = {};
+                if (tipo === 'estoque_baixo') params.minimo = 5;
+                if (tipo === 'produtos_mais_vendidos') params.limite = 20;
+                if (tipo === 'ranking_lucro') { params.limite = 20; }
+                if (filtrosRelatorio.includes(tipo)) {
+                    params.data_inicio = document.getElementById('dataInicio').value;
+                    params.data_fim = document.getElementById('dataFim').value;
+                }
+                const response = await API.relatorio(tipo, params);
+                renderizarRelatorio(tipo, response.dados);
+            } catch (error) {
+                document.getElementById('relatorioConteudo').innerHTML = `<div class="alert alert-danger">Erro ao carregar relatório: ${error.message}</div>`;
+            } finally {
+                document.getElementById('loading').classList.add('d-none');
+            }
+        }
+
+        function carregarRelatorioAtual() { if (relatorioAtual) carregarRelatorio(relatorioAtual); }
+
+        function renderizarRelatorio(tipo, dados) {
+            const container = document.getElementById('relatorioConteudo');
+            if (!dados) { container.innerHTML = '<div class="alert alert-warning">Nenhum dado encontrado</div>'; return; }
+
+            if (tipo === 'dashboard') {
+                container.innerHTML = `
+                    <div class="row g-4">
+                        <div class="col-md-3"><div class="card stat-card"><div class="card-body"><p class="stat-label">Total Produtos</p><p class="stat-value">${dados.resumo_estoque?.total_produtos || 0}</p></div></div></div>
+                        <div class="col-md-3"><div class="card stat-card warning"><div class="card-body"><p class="stat-label">Estoque Baixo</p><p class="stat-value text-warning">${dados.resumo_estoque?.produtos_estoque_baixo || 0}</p></div></div></div>
+                        <div class="col-md-3"><div class="card stat-card danger"><div class="card-body"><p class="stat-label">Esgotados</p><p class="stat-value text-danger">${dados.resumo_estoque?.produtos_esgotados || 0}</p></div></div></div>
+                        <div class="col-md-3"><div class="card stat-card success"><div class="card-body"><p class="stat-label">Lucro Potencial</p><p class="stat-value text-success">${money(dados.resumo_estoque?.lucro_potencial)}</p></div></div></div>
+                    </div>
+                    <div class="row mt-4">
+                        <div class="col-md-6"><h6>🏆 Produtos Mais Vendidos (por lucro)</h6>${renderTabelaLucro(dados.produtos_mais_vendidos || [])}</div>
+                        <div class="col-md-6"><h6>⚠️ Estoque Baixo</h6>${renderListaEstoqueBaixo(dados.estoque_baixo || [])}</div>
+                    </div>
+                `;
+            } else if (tipo === 'estoque_baixo') {
+                container.innerHTML = renderTabelaEstoqueBaixo(dados);
+            } else if (tipo === 'produtos_mais_vendidos') {
+                container.innerHTML = renderTabelaProdutosMaisVendidos(dados);
+            } else if (tipo === 'resumo_estoque') {
+                container.innerHTML = `
+                    <div class="row g-4">
+                        <div class="col-md-3"><div class="card"><div class="card-body text-center"><h3>${dados.total_produtos || 0}</h3><p class="text-muted">Total de Produtos</p></div></div></div>
+                        <div class="col-md-3"><div class="card"><div class="card-body text-center"><h3>${dados.total_itens_estoque || 0}</h3><p class="text-muted">Itens em Estoque</p></div></div></div>
+                        <div class="col-md-3"><div class="card"><div class="card-body text-center"><h3 class="text-primary">${money(dados.valor_total_venda)}</h3><p class="text-muted">Valor Total Venda</p></div></div></div>
+                        <div class="col-md-3"><div class="card"><div class="card-body text-center"><h3 class="text-success">${money(dados.lucro_potencial)}</h3><p class="text-muted">Lucro Potencial</p></div></div></div>
+                    </div>
+                `;
+            } else if (tipo === 'receita_periodo') {
+                container.innerHTML = `
+                    <div class="row g-4">
+                        <div class="col-md-3"><div class="card"><div class="card-body text-center"><h4>${dados.total_vendas || 0}</h4><small>Vendas</small></div></div></div>
+                        <div class="col-md-3"><div class="card"><div class="card-body text-center"><h4>${money(dados.receita_bruta)}</h4><small>Receita Bruta</small></div></div></div>
+                        <div class="col-md-3"><div class="card"><div class="card-body text-center"><h4 class="text-danger">- ${money(dados.total_descontos)}</h4><small>Descontos</small></div></div></div>
+                        <div class="col-md-3"><div class="card"><div class="card-body text-center"><h4 class="text-success">${money(dados.lucro_liquido)}</h4><small>Lucro Líquido</small></div></div></div>
+                    </div>
+                    <div class="row mt-4 g-4">
+                        <div class="col-md-4"><div class="card"><div class="card-body text-center"><h5>${money(dados.custo_total)}</h5><small class="text-muted">Custo Total</small></div></div></div>
+                        <div class="col-md-4"><div class="card"><div class="card-body text-center"><h5>${money(dados.ticket_medio)}</h5><small class="text-muted">Ticket Médio</small></div></div></div>
+                        <div class="col-md-4"><div class="card"><div class="card-body text-center"><h5 class="${num(dados.margem_media_percentual) >= 30 ? 'text-success' : 'text-warning'}">${percent(dados.margem_media_percentual)}</h5><small class="text-muted">Margem Média</small></div></div></div>
+                    </div>
+                `;
+            } else if (tipo === 'ranking_lucro') {
+                container.innerHTML = renderTabelaRankingLucro(dados);
+            } else if (tipo === 'descontos') {
+                container.innerHTML = renderTabelaDescontos(dados);
+            } else if (tipo === 'produtos_marca') {
+                container.innerHTML = renderTabelaProdutosMarca(dados);
+            } else if (tipo === 'vendas_periodo') {
+                container.innerHTML = renderTabelaVendasPeriodo(dados);
+            } else if (tipo === 'movimentacoes_usuario') {
+                container.innerHTML = renderTabelaMovimentacoesUsuario(dados);
+            } else {
+                container.innerHTML = '<div class="alert alert-info">Relatório em desenvolvimento</div>';
+            }
+        }
+
+        function renderTabelaVendasPeriodo(dados) {
+            if (!dados || !dados.length) return '<div class="alert alert-warning">Nenhuma venda no período</div>';
+            return `<div class="table-responsive"><table class="table table-hover"><thead class="table-light"><tr><th>Período</th><th>Vendas</th><th>Itens</th><th>Receita Bruta</th><th>Descontos</th><th>Receita Líquida</th><th>Lucro</th></tr></thead><tbody>${dados.map(p => `<tr><td>${p.periodo}</td><td>${p.total_vendas}</td><td>${p.total_itens}</td><td>${money(p.receita_bruta)}</td><td class="discount-text">- ${money(p.total_descontos)}</td><td>${money(p.receita_liquida)}</td><td class="profit-positive">${money(p.lucro_liquido)}</td></tr>`).join('')}</tbody></table></div>`;
+        }
+
+        function renderTabelaMovimentacoesUsuario(dados) {
+            if (!dados || !dados.length) return '<div class="alert alert-warning">Nenhum usuário encontrado</div>';
+            return `<div class="table-responsive"><table class="table table-hover"><thead class="table-light"><tr><th>Usuário</th><th>E-mail</th><th>Nível</th><th>Movimentações</th><th>Entradas</th><th>Saídas</th><th>Lucro Gerado</th><th>Descontos</th></tr></thead><tbody>${dados.map(u => `<tr><td>${u.nome}</td><td>${u.email}</td><td><span class="badge ${u.nivel === 'admin' ? 'bg-danger' : u.nivel === 'vendedor' ? 'bg-primary' : 'bg-secondary'}">${u.nivel}</span></td><td>${u.total_movimentacoes}</td><td>${u.total_entradas}</td><td>${u.total_saidas}</td><td class="profit-positive">${money(u.lucro_total_gerado)}</td><td class="discount-text">- ${money(u.descontos_concedidos)}</td></tr>`).join('')}</tbody></table></div>`;
+        }
+
+        function renderTabelaEstoqueBaixo(dados) {
+            if (!dados || !dados.length) return '<div class="alert alert-success">Nenhum produto com estoque baixo!</div>';
+            return `<div class="table-responsive"><table class="table table-hover"><thead class="table-light"><tr><th>Produto</th><th>Marca</th><th>Estoque</th><th>Custo</th><th>Venda</th><th>Lucro Un.</th><th>Margem</th><th>Status</th></tr></thead><tbody>${dados.map(p => `<tr><td>${p.nome}</td><td>${p.marca_nome}</td><td><span class="badge ${p.estoque <= 0 ? 'bg-danger' : 'bg-warning'}">${p.estoque}</span></td><td>${money(p.preco_custo)}</td><td>${money(p.preco_venda)}</td><td class="${num(p.lucro_unitario) >= 0 ? 'profit-positive' : 'profit-negative'}">${money(p.lucro_unitario)}</td><td>${percent(p.margem_percentual)}</td><td>${p.status_estoque}</td></tr>`).join('')}</tbody></table></div>`;
+        }
+
+        function renderTabelaProdutosMaisVendidos(dados) {
+            if (!dados || !dados.length) return '<div class="alert alert-warning">Nenhuma venda registrada</div>';
+            return `<div class="table-responsive"><table class="table table-hover"><thead class="table-light"><tr><th>Produto</th><th>Marca</th><th>Vendido</th><th>Receita</th><th>Descontos</th><th>Lucro Total</th><th>Estoque</th></tr></thead><tbody>${dados.map(p => `<tr><td>${p.nome}</td><td>${p.marca_nome}</td><td>${p.total_vendido}</td><td>${money(p.receita_bruta)}</td><td class="discount-text">- ${money(p.total_descontos)}</td><td class="${num(p.lucro_total) >= 0 ? 'profit-positive' : 'profit-negative'}">${money(p.lucro_total)}</td><td>${p.estoque_atual}</td></tr>`).join('')}</tbody></table></div>`;
+        }
+
+        function renderTabelaRankingLucro(dados) {
+            if (!dados || !dados.length) return '<div class="alert alert-warning">Nenhum dado encontrado</div>';
+            return `<div class="table-responsive"><table class="table table-hover"><thead class="table-light"><tr><th>#</th><th>Produto</th><th>Marca</th><th>Custo</th><th>Venda</th><th>Lucro Un.</th><th>Margem</th><th>Vendido</th><th>Lucro Total</th><th>Descontos</th></tr></thead><tbody>${dados.map((p, i) => `<tr><td><strong>${i + 1}</strong></td><td>${p.nome}</td><td>${p.marca_nome}</td><td>${money(p.preco_custo)}</td><td>${money(p.preco_venda)}</td><td class="${num(p.lucro_unitario) >= 0 ? 'profit-positive' : 'profit-negative'}">${money(p.lucro_unitario)}</td><td>${percent(p.margem_percentual)}</td><td>${p.total_vendido || 0}</td><td class="${num(p.lucro_total_real) >= 0 ? 'profit-positive' : 'profit-negative'}">${money(p.lucro_total_real)}</td><td class="discount-text">- ${money(p.descontos_concedidos)}</td></tr>`).join('')}</tbody></table></div>`;
+        }
+
+        function renderTabelaDescontos(dados) {
+            if (!dados || !dados.length) return '<div class="alert alert-warning">Nenhum desconto registrado no período</div>';
+            return `<div class="table-responsive"><table class="table table-hover"><thead class="table-light"><tr><th>Período</th><th>Vendas</th><th>Total Descontos</th><th>Receita Líquida</th><th>% Desconto Médio</th><th>Lucro Líquido</th></tr></thead><tbody>${dados.map(p => `<tr><td>${p.periodo}</td><td>${p.total_vendas}</td><td class="discount-text">${money(p.total_descontos)}</td><td>${money(p.receita_liquida)}</td><td>${percent(p.percentual_desconto_medio)}</td><td class="${num(p.lucro_liquido) >= 0 ? 'profit-positive' : 'profit-negative'}">${money(p.lucro_liquido)}</td></tr>`).join('')}</tbody></table></div>`;
+        }
+
+        function renderTabelaProdutosMarca(dados) {
+            if (!dados || !dados.length) return '<div class="alert alert-warning">Nenhuma marca encontrada</div>';
+            return `<div class="table-responsive"><table class="table table-hover"><thead class="table-light"><tr><th>Marca</th><th>Produtos</th><th>Estoque Total</th><th>Valor Custo</th><th>Valor Venda</th><th>Lucro Potencial</th><th>Margem Média</th></tr></thead><tbody>${dados.map(m => `<tr><td>${m.nome}</td><td>${m.total_produtos}</td><td>${m.total_estoque}</td><td>${money(m.valor_custo_estoque)}</td><td>${money(m.valor_venda_estoque)}</td><td class="${num(m.lucro_potencial_estoque) >= 0 ? 'profit-positive' : 'profit-negative'}">${money(m.lucro_potencial_estoque)}</td><td>${percent(m.margem_media)}</td></tr>`).join('')}</tbody></table></div>`;
+        }
+
+        function renderListaEstoqueBaixo(dados) {
+            if (!dados || !dados.length) return '<div class="alert alert-success">Nenhum produto com estoque baixo!</div>';
+            return `<ul class="list-group">${dados.slice(0, 10).map(p => `<li class="list-group-item d-flex justify-content-between"><span>${p.nome}</span><span class="badge ${p.estoque <= 0 ? 'bg-danger' : 'bg-warning'}">${p.estoque} un.</span></li>`).join('')}</ul>`;
+        }
+
+        function renderTabelaLucro(dados) {
+            if (!dados || !dados.length) return '<div class="alert alert-warning">Nenhuma venda registrada</div>';
+            return `<div class="table-responsive"><table class="table table-sm"><thead class="table-light"><tr><th>Produto</th><th>Vendido</th><th>Lucro</th></tr></thead><tbody>${dados.slice(0, 5).map(p => `<tr><td>${p.nome}</td><td>${p.total_vendido}</td><td class="profit-positive">${money(p.lucro_total)}</td></tr>`).join('')}</tbody></table></div>`;
+        }
+    </script>
+</body>
+
+</html>

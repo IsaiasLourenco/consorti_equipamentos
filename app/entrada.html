@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Consorti - Entrada de Estoque</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="assets/css/style.css">
+    <style>
+        .sidebar {
+            min-height: 100vh;
+            background: linear-gradient(180deg, #0d6efd 0%, #0a58ca 100%);
+            color: white;
+        }
+
+        .sidebar .nav-link {
+            color: rgba(255, 255, 255, 0.9);
+            padding: 0.75rem 1rem;
+            border-radius: 0.5rem;
+            margin: 0.25rem 0;
+        }
+
+        .sidebar .nav-link:hover,
+        .sidebar .nav-link.active {
+            background: rgba(255, 255, 255, 0.15);
+            color: white;
+        }
+
+        .sidebar .nav-link i {
+            margin-right: 0.5rem;
+            width: 20px;
+            text-align: center;
+        }
+
+        .product-search {
+            position: relative;
+        }
+
+        .product-search i {
+            position: absolute;
+            left: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #6c757d;
+        }
+
+        .product-search input {
+            padding-left: 2.75rem;
+            font-size: 1.1rem;
+        }
+
+        .product-result {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: white;
+            border: 1px solid #dee2e6;
+            border-radius: 0.5rem;
+            max-height: 300px;
+            overflow-y: auto;
+            z-index: 1000;
+            display: none;
+        }
+
+        .product-result-item {
+            padding: 0.75rem 1rem;
+            cursor: pointer;
+            border-bottom: 1px solid #f8f9fa;
+        }
+
+        .product-result-item:hover {
+            background: #f0f7ff;
+        }
+
+        .cart-item {
+            padding: 0.75rem;
+            border: 1px solid #e9ecef;
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .cart-item-remove {
+            color: #dc3545;
+            cursor: pointer;
+        }
+
+        .total-section {
+            background: #f8f9fa;
+            padding: 1.5rem;
+            border-radius: 0.75rem;
+        }
+
+        .total-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.5rem 0;
+            border-bottom: 1px solid #dee2e6;
+        }
+
+        .total-row:last-child {
+            border-bottom: none;
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+
+        #loading {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(255, 255, 255, 0.9);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="loading">
+        <div class="text-center">
+            <div class="spinner-border text-primary" role="status"></div>
+            <p class="mt-2 mb-0">Carregando...</p>
+        </div>
+    </div>
+
+    <div class="container-fluid">
+        <div class="row">
+            <nav class="col-md-3 col-lg-2 d-md-block sidebar collapse show">
+                <div class="position-sticky pt-3 px-2">
+                    <div class="text-center mb-4 pb-3 border-bottom border-light">
+                        <i class="bi bi-box-seam" style="font-size: 2rem;"></i>
+                        <h5 class="mt-2 mb-0">Consorti</h5>
+                        <small class="text-white-50">Gestão Local</small>
+                    </div>
+                    <ul class="nav flex-column">
+                        <li class="nav-item"><a class="nav-link" href="dashboard.html"><i
+                                    class="bi bi-speedometer2"></i> Dashboard</a></li>
+                        <li class="nav-item"><a class="nav-link" href="estoque.html"><i class="bi bi-search"></i>
+                                Consultar Estoque</a></li>
+                        <li class="nav-item"><a class="nav-link" href="pdv.html"><i class="bi bi-cart"></i> PDV /
+                                Vendas</a></li>
+                        <li class="nav-item"><a class="nav-link active" href="entrada.html"><i
+                                    class="bi bi-arrow-down-circle"></i> Entrada de Estoque</a></li>
+                        <li class="nav-item"><a class="nav-link" href="relatorios.html"><i class="bi bi-bar-chart"></i>
+                                Relatórios</a></li>
+                        <li class="nav-item"><a class="nav-link" href="vendedores.html"><i class="bi bi-people"></i>
+                                Vendedores</a></li>
+                        <li class="nav-item mt-4 pt-3 border-top border-light"><a class="nav-link" href="config.html"><i
+                                    class="bi bi-gear"></i> Configurações</a></li>
+                        <li class="nav-item"><a class="nav-link text-danger" href="#"
+                                onclick="Auth.logout(); return false;"><i class="bi bi-box-arrow-left"></i> Sair</a>
+                        </li>
+                    </ul>
+                    <div class="mt-4 px-2">
+                        <div class="card bg-white text-dark">
+                            <div class="card-body py-2 px-3"><small class="text-muted">Logado como:</small>
+                                <div id="userInfo" class="fw-semibold text-truncate"></div><small class="text-muted"
+                                    id="userNivel"></small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </nav>
+
+            <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4 py-4">
+                <div
+                    class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-3 mb-4 border-bottom">
+                    <h1 class="h3 mb-0">📥 Entrada de Estoque</h1>
+                    <button class="btn btn-sm btn-outline-secondary" onclick="limparCarrinho()"><i
+                            class="bi bi-trash"></i> Limpar</button>
+                </div>
+
+                <div class="row g-4">
+                    <div class="col-lg-7">
+                        <div class="card mb-4">
+                            <div class="card-header"><i class="bi bi-search"></i> Adicionar Produto</div>
+                            <div class="card-body">
+                                <div class="product-search">
+                                    <i class="bi bi-search"></i>
+                                    <input type="text" class="form-control form-control-lg" id="searchProduct"
+                                        placeholder="Digite nome, SKU ou código..." autocomplete="off"
+                                        onkeyup="buscarProdutoParaAdicionar()">
+                                    <div class="product-result" id="searchResults"></div>
+                                </div>
+                                <div id="selectedProduct" class="mt-3 d-none">
+                                    <div class="alert alert-success d-flex justify-content-between align-items-center">
+                                        <div><strong id="selectedProductName"></strong>
+                                            <div class="small text-muted">Estoque atual: <span
+                                                    id="selectedProductStock"></span></div>
+                                        </div>
+                                        <div class="d-flex gap-2 align-items-center">
+                                            <input type="number" class="form-control" id="qtdEntrada" value="1" min="1"
+                                                style="width: 80px;">
+                                            <button class="btn btn-sm btn-success" onclick="adicionarAoCarrinho()"><i
+                                                    class="bi bi-plus-circle"></i> Adicionar</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card">
+                            <div class="card-header d-flex justify-content-between align-items-center">
+                                <span><i class="bi bi-box"></i> Itens para Entrada</span>
+                                <span class="badge bg-success" id="cartCount">0 itens</span>
+                            </div>
+                            <div class="card-body" id="cartItems">
+                                <div class="text-center text-muted py-5"><i class="bi bi-inbox"
+                                        style="font-size: 3rem;"></i>
+                                    <p class="mt-3">Nenhum item adicionado</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-lg-5">
+                        <div class="card mb-4">
+                            <div class="card-header"><i class="bi bi-clipboard"></i> Informações da Entrada</div>
+                            <div class="card-body">
+                                <div class="mb-3">
+                                    <label class="form-label">Tipo de Entrada</label>
+                                    <select class="form-select" id="tipoEntrada">
+                                        <option value="entrada">Compra de Fornecedor</option>
+                                        <option value="ajuste">Ajuste de Estoque</option>
+                                        <option value="devolucao">Devolução de Cliente</option>
+                                    </select>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Observações</label>
+                                    <textarea class="form-control" id="obsEntrada" rows="3"
+                                        placeholder="Ex: Nota fiscal 123, Fornecedor XYZ..."></textarea>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="total-section mb-4">
+                            <div class="total-row"><span class="text-muted">Total de Itens</span><span
+                                    id="totalItens">0</span></div>
+                            <div class="total-row"><span class="text-muted">Valor Total (custo)</span><span
+                                    id="valorTotal">R$ 0,00</span></div>
+                        </div>
+
+                        <div class="d-grid gap-2">
+                            <button class="btn btn-success btn-lg" onclick="registrarEntrada()" id="btnRegistrar"
+                                disabled><i class="bi bi-check-circle"></i> Registrar Entrada</button>
+                            <button class="btn btn-outline-secondary" onclick="cancelarEntrada()"><i
+                                    class="bi bi-x-circle"></i> Cancelar</button>
+                        </div>
+
+                        <div class="card mt-4">
+                            <div class="card-header"><i class="bi bi-clock-history"></i> Última Entrada</div>
+                            <div class="card-body" id="lastEntradaInfo"><small class="text-muted">Nenhuma entrada
+                                    registrada nesta sessão</small></div>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="assets/js/api.js"></script>
+    <script src="assets/js/auth.js"></script>
+    <script>
+        if (!Auth.requerLogin()) { }
+        let carrinho = [];
+        let produtoSelecionado = null;
+        let debounceTimer = null;
+
+        document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('loading').classList.add('d-none');
+            const user = Auth.getUsuario();
+            if (user) {
+                document.getElementById('userInfo').textContent = user.nome;
+                document.getElementById('userNivel').textContent = user.nivel === 'admin' ? '👑 Administrador' : user.nivel === 'vendedor' ? '👤 Vendedor' : '👤 Cliente';
+            }
+            document.addEventListener('click', (e) => {
+                if (!e.target.closest('.product-search')) document.getElementById('searchResults').style.display = 'none';
+            });
+        });
+
+        async function buscarProdutoParaAdicionar() {
+            clearTimeout(debounceTimer);
+            const busca = document.getElementById('searchProduct').value.trim();
+            if (busca.length < 2) {
+                document.getElementById('searchResults').style.display = 'none';
+                produtoSelecionado = null;
+                document.getElementById('selectedProduct').classList.add('d-none');
+                return;
+            }
+            debounceTimer = setTimeout(async () => {
+                try {
+                    const response = await API.listarProdutos({ busca: busca, limite: 10 });
+                    if (response.status === 'sucesso' && response.dados.length > 0) mostrarResultadosBusca(response.dados);
+                    else document.getElementById('searchResults').style.display = 'none';
+                } catch (error) { console.error('Erro na busca:', error); }
+            }, 300);
+        }
+
+        function mostrarResultadosBusca(produtos) {
+            const container = document.getElementById('searchResults');
+            if (!produtos.length) { container.style.display = 'none'; return; }
+            container.innerHTML = produtos.map(prod => `
+                <div class="product-result-item" onclick="selecionarProdutoParaAdicionar(${prod.id})">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div><strong class="d-block text-truncate" style="max-width: 300px;">${prod.nome}</strong><small class="text-muted">${prod.marca_nome} | SKU: ${prod.sku}</small></div>
+                        <div class="text-end"><div class="text-primary fw-bold">R$ ${parseFloat(prod.preco_custo).toFixed(2).replace('.', ',')}</div><small class="text-muted">Estoque: ${prod.estoque}</small></div>
+                    </div>
+                </div>
+            `).join('');
+            container.style.display = 'block';
+        }
+
+        async function selecionarProdutoParaAdicionar(id) {
+            try {
+                const response = await API.buscarProduto(id);
+                if (response.status === 'sucesso') {
+                    produtoSelecionado = response.dados;
+                    document.getElementById('selectedProductName').textContent = produtoSelecionado.nome;
+                    document.getElementById('selectedProductStock').textContent = `${produtoSelecionado.estoque} un.`;
+                    document.getElementById('selectedProduct').classList.remove('d-none');
+                    document.getElementById('searchResults').style.display = 'none';
+                    document.getElementById('searchProduct').value = '';
+                }
+            } catch (error) { alert('Erro ao carregar produto'); }
+        }
+
+        function adicionarAoCarrinho() {
+            if (!produtoSelecionado) return;
+            const qtd = parseInt(document.getElementById('qtdEntrada').value) || 1;
+            const existente = carrinho.find(item => item.id === produtoSelecionado.id);
+            if (existente) {
+                existente.quantidade += qtd;
+                existente.subtotal = existente.quantidade * parseFloat(existente.preco_custo);
+            } else {
+                carrinho.push({
+                    id: produtoSelecionado.id, nome: produtoSelecionado.nome, sku: produtoSelecionado.sku,
+                    preco_custo: parseFloat(produtoSelecionado.preco_custo), quantidade: qtd,
+                    subtotal: qtd * parseFloat(produtoSelecionado.preco_custo)
+                });
+            }
+            produtoSelecionado = null;
+            document.getElementById('selectedProduct').classList.add('d-none');
+            atualizarCarrinho();
+        }
+
+        function atualizarCarrinho() {
+            const container = document.getElementById('cartItems');
+            const countBadge = document.getElementById('cartCount');
+            if (!carrinho.length) {
+                container.innerHTML = '<div class="text-center text-muted py-5"><i class="bi bi-inbox" style="font-size: 3rem;"></i><p class="mt-3">Nenhum item adicionado</p></div>';
+                countBadge.textContent = '0 itens';
+                document.getElementById('btnRegistrar').disabled = true;
+                atualizarTotais();
+                return;
+            }
+            container.innerHTML = carrinho.map((item, index) => `
+                <div class="cart-item d-flex justify-content-between align-items-center">
+                    <div class="flex-grow-1"><strong class="d-block">${item.nome}</strong><small class="text-muted">SKU: ${item.sku}</small></div>
+                    <div class="d-flex align-items-center gap-2">
+                        <input type="number" class="form-control form-control-sm" value="${item.quantidade}" min="1" style="width: 70px;" onchange="atualizarQuantidade(${index}, this.value)">
+                        <span class="fw-bold">R$ ${item.subtotal.toFixed(2).replace('.', ',')}</span>
+                        <i class="bi bi-trash cart-item-remove" onclick="removerDoCarrinho(${index})"></i>
+                    </div>
+                </div>
+            `).join('');
+            countBadge.textContent = `${carrinho.length} item${carrinho.length !== 1 ? 's' : ''}`;
+            document.getElementById('btnRegistrar').disabled = false;
+            atualizarTotais();
+        }
+
+        function atualizarQuantidade(index, qtd) {
+            qtd = parseInt(qtd) || 1;
+            if (qtd < 1) qtd = 1;
+            carrinho[index].quantidade = qtd;
+            carrinho[index].subtotal = qtd * carrinho[index].preco_custo;
+            atualizarCarrinho();
+        }
+
+        function removerDoCarrinho(index) { carrinho.splice(index, 1); atualizarCarrinho(); }
+        function limparCarrinho() { if (confirm('Limpar carrinho?')) { carrinho = []; atualizarCarrinho(); } }
+
+        function atualizarTotais() {
+            const totalItens = carrinho.reduce((sum, item) => sum + item.quantidade, 0);
+            const valorTotal = carrinho.reduce((sum, item) => sum + item.subtotal, 0);
+            document.getElementById('totalItens').textContent = totalItens;
+            document.getElementById('valorTotal').textContent = `R$ ${valorTotal.toFixed(2).replace('.', ',')}`;
+        }
+
+        async function registrarEntrada() {
+            if (!carrinho.length) { alert('Carrinho vazio!'); return; }
+            const user = Auth.getUsuario();
+            const tipo = document.getElementById('tipoEntrada').value;
+            const obs = document.getElementById('obsEntrada').value.trim();
+            if (!confirm(`Confirmar entrada de ${carrinho.length} item(s)?`)) return;
+            document.getElementById('loading').classList.remove('d-none');
+            try {
+                for (const item of carrinho) {
+                    await API.criarMovimentacao({
+                        produto_id: item.id, tipo: tipo, quantidade: item.quantidade,
+                        usuario_id: user.id, observacao: obs || 'Entrada de estoque', origem: 'entrada'
+                    });
+                }
+                const totalItens = carrinho.reduce((sum, item) => sum + item.quantidade, 0);
+                document.getElementById('lastEntradaInfo').innerHTML = `
+                    <div class="alert alert-success mb-0"><strong><i class="bi bi-check-circle"></i> Entrada registrada!</strong>
+                    <div class="mt-2"><small><strong>Itens:</strong> ${totalItens}<br><strong>Tipo:</strong> ${tipo}<br><strong>Data:</strong> ${new Date().toLocaleString('pt-BR')}</small></div></div>`;
+                carrinho = []; atualizarCarrinho(); document.getElementById('obsEntrada').value = '';
+            } catch (error) { alert('Erro ao registrar entrada: ' + error.message); }
+            finally { document.getElementById('loading').classList.add('d-none'); }
+        }
+
+        function cancelarEntrada() { if (confirm('Cancelar entrada?')) { carrinho = []; atualizarCarrinho(); document.getElementById('obsEntrada').value = ''; } }
+    </script>
+</body>
+
+</html>

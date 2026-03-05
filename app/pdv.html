@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Consorti - PDV / Vendas</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="assets/css/style.css">
+    <style>
+        .sidebar { min-height: 100vh; background: linear-gradient(180deg, #0d6efd 0%, #0a58ca 100%); color: white; }
+        .sidebar .nav-link { color: rgba(255,255,255,0.9); padding: 0.75rem 1rem; border-radius: 0.5rem; margin: 0.25rem 0; }
+        .sidebar .nav-link:hover, .sidebar .nav-link.active { background: rgba(255,255,255,0.15); color: white; }
+        .sidebar .nav-link i { margin-right: 0.5rem; width: 20px; text-align: center; }
+        .product-search { position: relative; }
+        .product-search i { position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); color: #6c757d; }
+        .product-search input { padding-left: 2.75rem; font-size: 1.1rem; }
+        .product-result { position: absolute; top: 100%; left: 0; right: 0; background: white; border: 1px solid #dee2e6; border-radius: 0.5rem; max-height: 300px; overflow-y: auto; z-index: 1000; display: none; }
+        .product-result-item { padding: 0.75rem 1rem; cursor: pointer; border-bottom: 1px solid #f8f9fa; }
+        .product-result-item:hover { background: #f0f7ff; }
+        .product-result-item:last-child { border-bottom: none; }
+        .cart-item { padding: 0.75rem; border: 1px solid #e9ecef; border-radius: 0.5rem; margin-bottom: 0.5rem; }
+        .cart-item-remove { color: #dc3545; cursor: pointer; }
+        .total-section { background: #f8f9fa; padding: 1.5rem; border-radius: 0.75rem; }
+        .total-row { display: flex; justify-content: space-between; padding: 0.5rem 0; border-bottom: 1px solid #dee2e6; }
+        .total-row:last-child { border-bottom: none; font-size: 1.5rem; font-weight: 700; }
+        .profit-row { font-size: 1.1rem; }
+        .profit-positive { color: #198754; }
+        .profit-negative { color: #dc3545; }
+        .payment-badge { padding: 0.5rem 1rem; border-radius: 0.5rem; cursor: pointer; border: 2px solid #dee2e6; transition: all 0.2s; }
+        .payment-badge:hover { border-color: #0d6efd; }
+        .payment-badge.selected { border-color: #0d6efd; background: #f0f7ff; }
+        #loading { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(255,255,255,0.9); display: flex; align-items: center; justify-content: center; z-index: 9999; }
+        .discount-input { max-width: 120px; }
+    </style>
+</head>
+<body>
+    <!-- Loading Overlay -->
+    <div id="loading">
+        <div class="text-center">
+            <div class="spinner-border text-primary" role="status"></div>
+            <p class="mt-2 mb-0">Processando...</p>
+        </div>
+    </div>
+
+    <div class="container-fluid">
+        <div class="row">
+            <!-- Sidebar -->
+            <nav class="col-md-3 col-lg-2 d-md-block sidebar collapse show">
+                <div class="position-sticky pt-3 px-2">
+                    <div class="text-center mb-4 pb-3 border-bottom border-light">
+                        <i class="bi bi-box-seam" style="font-size: 2rem;"></i>
+                        <h5 class="mt-2 mb-0">Consorti</h5>
+                        <small class="text-white-50">Gestão Local</small>
+                    </div>
+                    
+                    <ul class="nav flex-column">
+                        <li class="nav-item"><a class="nav-link" href="dashboard.html"><i class="bi bi-speedometer2"></i> Dashboard</a></li>
+                        <li class="nav-item"><a class="nav-link" href="estoque.html"><i class="bi bi-search"></i> Consultar Estoque</a></li>
+                        <li class="nav-item"><a class="nav-link active" href="pdv.html"><i class="bi bi-cart"></i> PDV / Vendas</a></li>
+                        <li class="nav-item"><a class="nav-link" href="entrada.html"><i class="bi bi-arrow-down-circle"></i> Entrada de Estoque</a></li>
+                        <li class="nav-item"><a class="nav-link" href="relatorios.html"><i class="bi bi-bar-chart"></i> Relatórios</a></li>
+                        <li class="nav-item"><a class="nav-link" href="vendedores.html"><i class="bi bi-people"></i> Vendedores</a></li>
+                        <li class="nav-item mt-4 pt-3 border-top border-light"><a class="nav-link" href="config.html"><i class="bi bi-gear"></i> Configurações</a></li>
+                        <li class="nav-item"><a class="nav-link text-danger" href="#" onclick="Auth.logout(); return false;"><i class="bi bi-box-arrow-left"></i> Sair</a></li>
+                    </ul>
+                    
+                    <div class="mt-4 px-2">
+                        <div class="card bg-white text-dark">
+                            <div class="card-body py-2 px-3">
+                                <small class="text-muted">Logado como:</small>
+                                <div id="userInfo" class="fw-semibold text-truncate"></div>
+                                <small class="text-muted" id="userNivel"></small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </nav>
+
+            <!-- Main Content -->
+            <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4 py-4">
+                <!-- Header -->
+                <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-3 mb-4 border-bottom">
+                    <h1 class="h3 mb-0">🛒 PDV - Ponto de Venda</h1>
+                    <div class="btn-toolbar">
+                        <span class="text-muted small me-3" id="dataAtual"></span>
+                        <button class="btn btn-sm btn-outline-secondary" onclick="limparCarrinho()"><i class="bi bi-trash"></i> Limpar Carrinho</button>
+                    </div>
+                </div>
+
+                <div class="row g-4">
+                    <!-- Left: Product Search & Cart -->
+                    <div class="col-lg-7">
+                        <!-- Product Search -->
+                        <div class="card mb-4">
+                            <div class="card-header"><i class="bi bi-search"></i> Adicionar Produto</div>
+                            <div class="card-body">
+                                <div class="product-search">
+                                    <i class="bi bi-search"></i>
+                                    <input type="text" class="form-control form-control-lg" id="searchProduct" placeholder="Digite nome, SKU ou código do produto..." autocomplete="off" onkeyup="buscarProdutoParaAdicionar()">
+                                    <div class="product-result" id="searchResults"></div>
+                                </div>
+                                <div id="selectedProduct" class="mt-3 d-none">
+                                    <div class="alert alert-success d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <strong id="selectedProductName"></strong>
+                                            <div class="small text-muted">
+                                                Estoque: <span id="selectedProductStock"></span> | 
+                                                Custo: R$ <span id="selectedProductCusto"></span> | 
+                                                Venda: R$ <span id="selectedProductPreco"></span>
+                                            </div>
+                                        </div>
+                                        <button class="btn btn-sm btn-success" onclick="adicionarAoCarrinho()"><i class="bi bi-plus-circle"></i> Adicionar</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Cart -->
+                        <div class="card">
+                            <div class="card-header d-flex justify-content-between align-items-center">
+                                <span><i class="bi bi-cart"></i> Itens no Carrinho</span>
+                                <span class="badge bg-primary" id="cartCount">0 itens</span>
+                            </div>
+                            <div class="card-body" id="cartItems">
+                                <div class="text-center text-muted py-5">
+                                    <i class="bi bi-cart-x" style="font-size: 3rem;"></i>
+                                    <p class="mt-3">Carrinho vazio</p>
+                                    <small>Adicione produtos para iniciar a venda</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Right: Payment & Checkout -->
+                    <div class="col-lg-5">
+                        <!-- Payment Method -->
+                        <div class="card mb-4">
+                            <div class="card-header"><i class="bi bi-credit-card"></i> Forma de Pagamento</div>
+                            <div class="card-body">
+                                <div class="row g-2">
+                                    <div class="col-6">
+                                        <div class="payment-badge selected text-center" onclick="selectPayment('vista', this)">
+                                            <i class="bi bi-cash-coin d-block fs-4"></i>
+                                            <strong>À Vista</strong>
+                                            <small class="text-muted">Dinheiro/Pix</small>
+                                        </div>
+                                    </div>
+                                    <div class="col-6">
+                                        <div class="payment-badge text-center" onclick="selectPayment('prazo', this)">
+                                            <i class="bi bi-credit-card-2-front d-block fs-4"></i>
+                                            <strong>A Prazo</strong>
+                                            <small class="text-muted">Cartão/Boleto</small>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="mt-3">
+                                    <label class="form-label small text-muted">Observações (opcional)</label>
+                                    <textarea class="form-control" id="obsVenda" rows="2" placeholder="Ex: Cliente João, desconto especial..."></textarea>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Discount -->
+                        <div class="card mb-4">
+                            <div class="card-header"><i class="bi bi-percent"></i> Desconto</div>
+                            <div class="card-body">
+                                <div class="row g-2">
+                                    <div class="col-6">
+                                        <label class="form-label small">Valor (R$)</label>
+                                        <input type="number" class="form-control" id="descontoValor" value="0" min="0" step="0.01" onchange="aplicarDesconto('valor')">
+                                    </div>
+                                    <div class="col-6">
+                                        <label class="form-label small">Porcentagem (%)</label>
+                                        <input type="number" class="form-control" id="descontoPorcento" value="0" min="0" max="100" step="0.1" onchange="aplicarDesconto('porcento')">
+                                    </div>
+                                </div>
+                                <small class="text-muted mt-2 d-block">* Desconto aplicado sobre o total da venda</small>
+                            </div>
+                        </div>
+
+                        <!-- Totals -->
+                        <div class="total-section mb-4">
+                            <div class="total-row">
+                                <span class="text-muted">Subtotal</span>
+                                <span id="subtotal">R$ 0,00</span>
+                            </div>
+                            <div class="total-row text-danger">
+                                <span class="text-muted">Desconto</span>
+                                <span id="desconto">- R$ 0,00</span>
+                            </div>
+                            <div class="total-row text-primary">
+                                <span>TOTAL</span>
+                                <span id="totalGeral">R$ 0,00</span>
+                            </div>
+                            <div class="total-row profit-row">
+                                <span class="text-muted">Lucro da Venda</span>
+                                <span id="lucroVenda" class="profit-positive">R$ 0,00</span>
+                            </div>
+                            <div class="total-row profit-row">
+                                <span class="text-muted">Margem Real</span>
+                                <span id="margemVenda" class="profit-positive">0%</span>
+                            </div>
+                        </div>
+
+                        <!-- Checkout Button -->
+                        <div class="d-grid gap-2">
+                            <button class="btn btn-success btn-lg" onclick="finalizarVenda()" id="btnFinalizar" disabled>
+                                <i class="bi bi-check-circle"></i> Finalizar Venda
+                            </button>
+                            <button class="btn btn-outline-secondary" onclick="cancelarVenda()">
+                                <i class="bi bi-x-circle"></i> Cancelar
+                            </button>
+                        </div>
+
+                        <!-- Last Sale Info -->
+                        <div class="card mt-4">
+                            <div class="card-header"><i class="bi bi-clock-history"></i> Última Venda</div>
+                            <div class="card-body" id="lastSaleInfo">
+                                <small class="text-muted">Nenhuma venda registrada nesta sessão</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="assets/js/api.js"></script>
+    <script src="assets/js/auth.js"></script>
+    <script>
+        // === Verifica autenticação ===
+        if (!Auth.requerLogin()) {}
+
+        // === Variáveis globais ===
+        let carrinho = [];
+        let produtoSelecionado = null;
+        let formaPagamento = 'vista';
+        let descontoAplicado = 0;
+        let debounceTimer = null;
+
+        // === Inicialização ===
+        document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('loading').classList.add('d-none');
+            const user = Auth.getUsuario();
+            if (user) {
+                document.getElementById('userInfo').textContent = user.nome;
+                document.getElementById('userNivel').textContent = user.nivel === 'admin' ? '👑 Administrador' : user.nivel === 'vendedor' ? '👤 Vendedor' : '👤 Cliente';
+            }
+            const hoje = new Date();
+            document.getElementById('dataAtual').textContent = hoje.toLocaleDateString('pt-BR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+
+            const urlParams = new URLSearchParams(window.location.search);
+            const produtoId = urlParams.get('produto');
+            if (produtoId) carregarProdutoParaAdicionar(produtoId);
+
+            document.addEventListener('click', (e) => {
+                if (!e.target.closest('.product-search')) document.getElementById('searchResults').style.display = 'none';
+            });
+        });
+
+        // === Busca produto para adicionar ===
+        async function buscarProdutoParaAdicionar() {
+            clearTimeout(debounceTimer);
+            const busca = document.getElementById('searchProduct').value.trim();
+            if (busca.length < 2) {
+                document.getElementById('searchResults').style.display = 'none';
+                produtoSelecionado = null;
+                document.getElementById('selectedProduct').classList.add('d-none');
+                return;
+            }
+            debounceTimer = setTimeout(async () => {
+                try {
+                    const response = await API.listarProdutos({ busca: busca, limite: 10 });
+                    if (response.status === 'sucesso' && response.dados.length > 0) mostrarResultadosBusca(response.dados);
+                    else document.getElementById('searchResults').style.display = 'none';
+                } catch (error) { console.error('Erro na busca:', error); }
+            }, 300);
+        }
+
+        // === Mostra resultados da busca ===
+        function mostrarResultadosBusca(produtos) {
+            const container = document.getElementById('searchResults');
+            if (!produtos.length) { container.style.display = 'none'; return; }
+            container.innerHTML = produtos.map(prod => {
+                const stockClass = prod.estoque <= 0 ? 'text-danger' : prod.estoque <= 5 ? 'text-warning' : 'text-success';
+                const stockText = prod.estoque <= 0 ? 'Esgotado' : prod.estoque <= 5 ? `Baixo (${prod.estoque})` : `${prod.estoque} un.`;
+                return `
+                    <div class="product-result-item" onclick="selecionarProdutoParaAdicionar(${prod.id})">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <strong class="d-block text-truncate" style="max-width: 300px;">${prod.nome}</strong>
+                                <small class="text-muted">${prod.marca_nome} | SKU: ${prod.sku}</small>
+                            </div>
+                            <div class="text-end">
+                                <div class="text-primary fw-bold">R$ ${parseFloat(prod.preco_venda).toFixed(2).replace('.', ',')}</div>
+                                <small class="${stockClass}">${stockText}</small>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+            container.style.display = 'block';
+        }
+
+        // === Seleciona produto para adicionar ===
+        async function selecionarProdutoParaAdicionar(id) {
+            try {
+                const response = await API.buscarProduto(id);
+                if (response.status === 'sucesso') {
+                    produtoSelecionado = response.dados;
+                    document.getElementById('selectedProductName').textContent = produtoSelecionado.nome;
+                    document.getElementById('selectedProductStock').textContent = produtoSelecionado.estoque <= 0 ? 'Esgotado' : `${produtoSelecionado.estoque} un.`;
+                    document.getElementById('selectedProductCusto').textContent = parseFloat(produtoSelecionado.preco_custo).toFixed(2).replace('.', ',');
+                    document.getElementById('selectedProductPreco').textContent = parseFloat(produtoSelecionado.preco_venda).toFixed(2).replace('.', ',');
+                    document.getElementById('selectedProduct').classList.remove('d-none');
+                    document.getElementById('searchResults').style.display = 'none';
+                    document.getElementById('searchProduct').value = '';
+                }
+            } catch (error) { alert('Erro ao carregar produto'); }
+        }
+
+        async function carregarProdutoParaAdicionar(id) { await selecionarProdutoParaAdicionar(id); }
+
+        // === Adiciona ao carrinho ===
+        function adicionarAoCarrinho() {
+            if (!produtoSelecionado) return;
+            if (produtoSelecionado.estoque <= 0) { alert('Produto esgotado!'); return; }
+
+            const existente = carrinho.find(item => item.id === produtoSelecionado.id);
+            if (existente) {
+                if (existente.quantidade >= produtoSelecionado.estoque) { alert('Quantidade máxima atingida!'); return; }
+                existente.quantidade++;
+                existente.subtotal = existente.quantidade * parseFloat(existente.preco_venda);
+                existente.lucroUnitario = parseFloat(existente.preco_venda) - parseFloat(existente.preco_custo);
+                existente.lucroTotal = existente.quantidade * existente.lucroUnitario;
+            } else {
+                carrinho.push({
+                    id: produtoSelecionado.id,
+                    nome: produtoSelecionado.nome,
+                    sku: produtoSelecionado.sku,
+                    preco_custo: parseFloat(produtoSelecionado.preco_custo),
+                    preco_venda: parseFloat(produtoSelecionado.preco_venda),
+                    quantidade: 1,
+                    subtotal: parseFloat(produtoSelecionado.preco_venda),
+                    estoque_max: produtoSelecionado.estoque,
+                    lucroUnitario: parseFloat(produtoSelecionado.preco_venda) - parseFloat(produtoSelecionado.preco_custo),
+                    lucroTotal: parseFloat(produtoSelecionado.preco_venda) - parseFloat(produtoSelecionado.preco_custo)
+                });
+            }
+
+            produtoSelecionado = null;
+            document.getElementById('selectedProduct').classList.add('d-none');
+            atualizarCarrinho();
+        }
+
+        // === Atualiza carrinho ===
+        function atualizarCarrinho() {
+            const container = document.getElementById('cartItems');
+            const countBadge = document.getElementById('cartCount');
+            
+            if (!carrinho.length) {
+                container.innerHTML = '<div class="text-center text-muted py-5"><i class="bi bi-cart-x" style="font-size: 3rem;"></i><p class="mt-3">Carrinho vazio</p></div>';
+                countBadge.textContent = '0 itens';
+                document.getElementById('btnFinalizar').disabled = true;
+                atualizarTotais();
+                return;
+            }
+
+            container.innerHTML = carrinho.map((item, index) => {
+                const lucroClass = item.lucroUnitario >= 0 ? 'text-success' : 'text-danger';
+                return `
+                    <div class="cart-item d-flex justify-content-between align-items-center">
+                        <div class="flex-grow-1">
+                            <strong class="d-block">${item.nome}</strong>
+                            <small class="text-muted">SKU: ${item.sku}</small>
+                            <small class="${lucroClass}">Lucro: R$ ${item.lucroUnitario.toFixed(2).replace('.', ',')} un.</small>
+                        </div>
+                        <div class="d-flex align-items-center gap-2">
+                            <input type="number" class="form-control form-control-sm" value="${item.quantidade}" min="1" max="${item.estoque_max}" style="width: 70px;" onchange="atualizarQuantidade(${index}, this.value)">
+                            <span class="fw-bold">R$ ${item.subtotal.toFixed(2).replace('.', ',')}</span>
+                            <i class="bi bi-trash cart-item-remove" onclick="removerDoCarrinho(${index})"></i>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            countBadge.textContent = `${carrinho.length} item${carrinho.length !== 1 ? 's' : ''}`;
+            document.getElementById('btnFinalizar').disabled = false;
+            atualizarTotais();
+        }
+
+        // === Atualiza quantidade ===
+        function atualizarQuantidade(index, qtd) {
+            qtd = parseInt(qtd) || 1;
+            if (qtd < 1) qtd = 1;
+            if (qtd > carrinho[index].estoque_max) { qtd = carrinho[index].estoque_max; alert('Quantidade máxima: ' + carrinho[index].estoque_max); }
+            carrinho[index].quantidade = qtd;
+            carrinho[index].subtotal = qtd * carrinho[index].preco_venda;
+            carrinho[index].lucroTotal = qtd * carrinho[index].lucroUnitario;
+            atualizarCarrinho();
+        }
+
+        // === Remove do carrinho ===
+        function removerDoCarrinho(index) { carrinho.splice(index, 1); atualizarCarrinho(); }
+        function limparCarrinho() { if (confirm('Limpar carrinho?')) { carrinho = []; atualizarCarrinho(); } }
+
+        // === Seleciona forma de pagamento ===
+        function selectPayment(tipo, element) {
+            formaPagamento = tipo;
+            document.querySelectorAll('.payment-badge').forEach(el => el.classList.remove('selected'));
+            element.classList.add('selected');
+            document.getElementById('formaPagamento').textContent = tipo === 'vista' ? 'À Vista' : 'A Prazo';
+        }
+
+        // === Aplica desconto ===
+        function aplicarDesconto(tipo) {
+            const subtotal = carrinho.reduce((sum, item) => sum + item.subtotal, 0);
+            
+            if (tipo === 'valor') {
+                const valor = parseFloat(document.getElementById('descontoValor').value) || 0;
+                descontoAplicado = Math.min(valor, subtotal);
+                document.getElementById('descontoPorcento').value = subtotal > 0 ? ((descontoAplicado / subtotal) * 100).toFixed(2) : 0;
+            } else {
+                const porcento = parseFloat(document.getElementById('descontoPorcento').value) || 0;
+                descontoAplicado = subtotal * (porcento / 100);
+                document.getElementById('descontoValor').value = descontoAplicado.toFixed(2);
+            }
+            
+            atualizarTotais();
+        }
+
+        // === Atualiza totais ===
+        function atualizarTotais() {
+            const subtotal = carrinho.reduce((sum, item) => sum + item.subtotal, 0);
+            const totalCusto = carrinho.reduce((sum, item) => sum + (item.quantidade * item.preco_custo), 0);
+            const lucroBruto = subtotal - totalCusto;
+            const total = subtotal - descontoAplicado;
+            const lucroReal = lucroBruto - descontoAplicado;
+            const margemReal = total > 0 ? ((lucroReal / total) * 100) : 0;
+
+            document.getElementById('subtotal').textContent = `R$ ${subtotal.toFixed(2).replace('.', ',')}`;
+            document.getElementById('desconto').textContent = `- R$ ${descontoAplicado.toFixed(2).replace('.', ',')}`;
+            document.getElementById('totalGeral').textContent = `R$ ${total.toFixed(2).replace('.', ',')}`;
+            
+            const lucroEl = document.getElementById('lucroVenda');
+            const margemEl = document.getElementById('margemVenda');
+            lucroEl.textContent = `R$ ${lucroReal.toFixed(2).replace('.', ',')}`;
+            margemEl.textContent = `${margemReal.toFixed(1)}%`;
+            lucroEl.className = `profit-row ${lucroReal >= 0 ? 'profit-positive' : 'profit-negative'}`;
+            margemEl.className = `profit-row ${margemReal >= 0 ? 'profit-positive' : 'profit-negative'}`;
+        }
+
+        // === Finaliza venda ===
+        async function finalizarVenda() {
+            if (!carrinho.length) { alert('Carrinho vazio!'); return; }
+            const user = Auth.getUsuario();
+            const obs = document.getElementById('obsVenda').value.trim();
+            const subtotal = carrinho.reduce((sum, item) => sum + item.subtotal, 0);
+            const total = subtotal - descontoAplicado;
+            const totalCusto = carrinho.reduce((sum, item) => sum + (item.quantidade * item.preco_custo), 0);
+            const lucroTotal = total - totalCusto;
+
+            if (!confirm(`Confirmar venda de ${carrinho.length} item(s)?\n\nSubtotal: R$ ${subtotal.toFixed(2).replace('.', ',')}\nDesconto: R$ ${descontoAplicado.toFixed(2).replace('.', ',')}\nTOTAL: R$ ${total.toFixed(2).replace('.', ',')}\nLucro: R$ ${lucroTotal.toFixed(2).replace('.', ',')}`)) return;
+
+            document.getElementById('loading').classList.remove('d-none');
+
+            try {
+                for (const item of carrinho) {
+                    const descontoProporcional = (item.subtotal / subtotal) * descontoAplicado;
+                    const lucroItem = (item.quantidade * item.preco_venda) - (item.quantidade * item.preco_custo) - descontoProporcional;
+                    const totalVendaItem = (item.quantidade * item.preco_venda) - descontoProporcional;
+
+                    await API.criarMovimentacao({
+                        produto_id: item.id,
+                        tipo: 'saida',
+                        quantidade: item.quantidade,
+                        usuario_id: user.id,
+                        observacao: `Venda PDV - ${obs || 'Sem observação'}`,
+                        origem: 'pdv',
+                        desconto: descontoProporcional,
+                        lucro: lucroTotal,
+                        total_venda: totalVendaItem
+                    });
+                }
+
+                document.getElementById('lastSaleInfo').innerHTML = `
+                    <div class="alert alert-success mb-0">
+                        <strong><i class="bi bi-check-circle"></i> Venda realizada!</strong>
+                        <div class="mt-2"><small>
+                            <strong>Itens:</strong> ${carrinho.length}<br>
+                            <strong>Total:</strong> R$ ${total.toFixed(2).replace('.', ',')}<br>
+                            <strong>Desconto:</strong> R$ ${descontoAplicado.toFixed(2).replace('.', ',')}<br>
+                            <strong>Lucro:</strong> R$ ${lucroTotal.toFixed(2).replace('.', ',')}<br>
+                            <strong>Pagamento:</strong> ${formaPagamento === 'vista' ? 'À Vista' : 'A Prazo'}<br>
+                            <strong>Data:</strong> ${new Date().toLocaleString('pt-BR')}
+                        </small></div>
+                    </div>
+                `;
+
+                carrinho = [];
+                atualizarCarrinho();
+                document.getElementById('obsVenda').value = '';
+                document.getElementById('descontoValor').value = '0';
+                document.getElementById('descontoPorcento').value = '0';
+                descontoAplicado = 0;
+
+            } catch (error) {
+                alert('Erro ao finalizar venda: ' + error.message);
+            } finally {
+                document.getElementById('loading').classList.add('d-none');
+            }
+        }
+
+        // === Cancela venda ===
+        function cancelarVenda() { if (confirm('Cancelar venda?')) { carrinho = []; atualizarCarrinho(); document.getElementById('obsVenda').value = ''; } }
+    </script>
+</body>
+</html>

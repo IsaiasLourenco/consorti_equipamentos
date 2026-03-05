@@ -1,0 +1,745 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Consorti - Consulta de Estoque</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="assets/css/style.css">
+    <style>
+        .sidebar {
+            min-height: 100vh;
+            background: linear-gradient(180deg, #0d6efd 0%, #0a58ca 100%);
+            color: white;
+        }
+
+        .sidebar .nav-link {
+            color: rgba(255, 255, 255, 0.9);
+            padding: 0.75rem 1rem;
+            border-radius: 0.5rem;
+            margin: 0.25rem 0;
+        }
+
+        .sidebar .nav-link:hover,
+        .sidebar .nav-link.active {
+            background: rgba(255, 255, 255, 0.15);
+            color: white;
+        }
+
+        .sidebar .nav-link i {
+            margin-right: 0.5rem;
+            width: 20px;
+            text-align: center;
+        }
+
+        .filter-section {
+            background: #f8f9fa;
+            padding: 1rem;
+            border-radius: 0.75rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .product-card {
+            border: 1px solid #e9ecef;
+            border-radius: 0.75rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+
+        .product-card:hover {
+            box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.1);
+            border-color: #0d6efd;
+        }
+
+        .product-card.selected {
+            border-color: #0d6efd;
+            background: #f0f7ff;
+        }
+
+        .stock-badge {
+            font-size: 0.875rem;
+            padding: 0.5em 0.75em;
+        }
+
+        .stock-zero {
+            background: #dc3545;
+            color: white;
+        }
+
+        .stock-low {
+            background: #ffc107;
+            color: #212529;
+        }
+
+        .stock-ok {
+            background: #198754;
+            color: white;
+        }
+
+        .price-tag {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: #0d6efd;
+        }
+
+        .detail-row {
+            padding: 0.5rem 0;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .detail-row:last-child {
+            border-bottom: none;
+        }
+
+        .detail-label {
+            color: #6c757d;
+            font-weight: 500;
+        }
+
+        #loading {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(255, 255, 255, 0.9);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+        }
+
+        .search-box {
+            position: relative;
+        }
+
+        .search-box i {
+            position: absolute;
+            left: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #6c757d;
+        }
+
+        .search-box input {
+            padding-left: 2.75rem;
+        }
+
+        @media print {
+
+            .sidebar,
+            .filter-section,
+            .no-print {
+                display: none !important;
+            }
+
+            .product-card {
+                break-inside: avoid;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Loading Overlay -->
+    <div id="loading">
+        <div class="text-center">
+            <div class="spinner-border text-primary" role="status"></div>
+            <p class="mt-2 mb-0">Carregando produtos...</p>
+        </div>
+    </div>
+
+    <div class="container-fluid">
+        <div class="row">
+            <!-- Sidebar -->
+            <nav class="col-md-3 col-lg-2 d-md-block sidebar collapse show">
+                <div class="position-sticky pt-3 px-2">
+                    <div class="text-center mb-4 pb-3 border-bottom border-light">
+                        <i class="bi bi-box-seam" style="font-size: 2rem;"></i>
+                        <h5 class="mt-2 mb-0">Consorti</h5>
+                        <small class="text-white-50">Gestão Local</small>
+                    </div>
+
+                    <ul class="nav flex-column">
+                        <li class="nav-item">
+                            <a class="nav-link" href="dashboard.html">
+                                <i class="bi bi-speedometer2"></i> Dashboard
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link active" href="estoque.html">
+                                <i class="bi bi-search"></i> Consultar Estoque
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="pdv.html">
+                                <i class="bi bi-cart"></i> PDV / Vendas
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="entrada.html">
+                                <i class="bi bi-arrow-down-circle"></i> Entrada de Estoque
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="relatorios.html">
+                                <i class="bi bi-bar-chart"></i> Relatórios
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="vendedores.html">
+                                <i class="bi bi-people"></i> Vendedores
+                            </a>
+                        </li>
+                        <li class="nav-item mt-4 pt-3 border-top border-light">
+                            <a class="nav-link" href="config.html">
+                                <i class="bi bi-gear"></i> Configurações
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link text-danger" href="#" onclick="Auth.logout(); return false;">
+                                <i class="bi bi-box-arrow-left"></i> Sair
+                            </a>
+                        </li>
+                    </ul>
+
+                    <div class="mt-4 px-2">
+                        <div class="card bg-white text-dark">
+                            <div class="card-body py-2 px-3">
+                                <small class="text-muted">Logado como:</small>
+                                <div id="userInfo" class="fw-semibold text-truncate"></div>
+                                <small class="text-muted" id="userNivel"></small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </nav>
+
+            <!-- Main Content -->
+            <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4 py-4">
+                <!-- Header -->
+                <div
+                    class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-3 mb-4 border-bottom">
+                    <h1 class="h3 mb-0">🔍 Consulta de Estoque</h1>
+                    <div class="btn-toolbar">
+                        <button class="btn btn-sm btn-outline-secondary me-2 no-print" onclick="window.print()">
+                            <i class="bi bi-printer"></i> Imprimir
+                        </button>
+                        <button class="btn btn-sm btn-primary no-print" onclick="limparFiltros()">
+                            <i class="bi bi-x-circle"></i> Limpar Filtros
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Filters -->
+                <div class="filter-section no-print">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">
+                                <i class="bi bi-search"></i> Buscar Produto
+                            </label>
+                            <div class="search-box">
+                                <i class="bi bi-search"></i>
+                                <input type="text" class="form-control" id="searchInput"
+                                    placeholder="Digite nome, SKU ou código..." onkeyup="buscarProdutos()">
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-semibold">
+                                <i class="bi bi-tags"></i> Filtrar por Marca
+                            </label>
+                            <select class="form-select" id="filterMarca" onchange="buscarProdutos()">
+                                <option value="">Todas as marcas</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label fw-semibold">
+                                <i class="bi bi-funnel"></i> Estoque
+                            </label>
+                            <select class="form-select" id="filterEstoque" onchange="buscarProdutos()">
+                                <option value="">Todos</option>
+                                <option value="zero">Esgotados</option>
+                                <option value="baixo">Baixo (≤5)</option>
+                                <option value="ok">Disponível</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="row mt-3">
+                        <div class="col-12">
+                            <span class="text-muted small" id="resultInfo">Carregando...</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Product List -->
+                <div class="row">
+                    <div class="col-12">
+                        <div id="productList">
+                            <!-- Products will be loaded here -->
+                        </div>
+
+                        <!-- Pagination -->
+                        <nav class="no-print" id="pagination" style="display: none;">
+                            <ul class="pagination justify-content-center" id="paginationList"></ul>
+                        </nav>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- Product Detail Modal -->
+    <div class="modal fade" id="productModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalTitle">Detalhes do Produto</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body" id="modalBody">
+                    <!-- Product details will be loaded here -->
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+                    <button type="button" class="btn btn-primary" onclick="irParaPDV()">
+                        <i class="bi bi-cart"></i> Vender este produto
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="assets/js/api.js"></script>
+    <script src="assets/js/auth.js"></script>
+    <script>
+        // === Verifica autenticação ===
+        if (!Auth.requerLogin()) { /* já redirecionou */ }
+
+        // === Variáveis globais ===
+        let produtos = [];
+        let marcas = [];
+        let paginaAtual = 1;
+        let totalPaginas = 1;
+        let produtoSelecionado = null;
+        let debounceTimer = null;
+
+        // === Inicialização ===
+        document.addEventListener('DOMContentLoaded', () => {
+            const user = Auth.getUsuario();
+            if (user) {
+                document.getElementById('userInfo').textContent = user.nome;
+                document.getElementById('userNivel').textContent =
+                    user.nivel === 'admin' ? '👑 Administrador' :
+                        user.nivel === 'vendedor' ? '👤 Vendedor' : '👤 Cliente';
+            }
+
+            // Verifica se veio com busca da URL
+            const urlParams = new URLSearchParams(window.location.search);
+            const busca = urlParams.get('busca');
+            if (busca) {
+                document.getElementById('searchInput').value = busca;
+            }
+
+            // Carrega marcas e produtos
+            carregarMarcas();
+            carregarProdutos();
+        });
+
+        // === Carrega lista de marcas ===
+        async function carregarMarcas() {
+            try {
+                const response = await API.listarMarcas();
+                if (response.status === 'sucesso') {
+                    marcas = response.dados || [];
+                    const select = document.getElementById('filterMarca');
+                    marcas.forEach(marca => {
+                        const option = document.createElement('option');
+                        option.value = marca.id;
+                        option.textContent = `${marca.nome} (${marca.total_produtos})`;
+                        select.appendChild(option);
+                    });
+                }
+            } catch (error) {
+                console.error('Erro ao carregar marcas:', error);
+            }
+        }
+
+        // === Carrega produtos ===
+        async function carregarProdutos() {
+            document.getElementById('loading').classList.remove('d-none');
+
+            try {
+                const params = {
+                    pagina: paginaAtual,
+                    limite: 20
+                };
+
+                const busca = document.getElementById('searchInput').value.trim();
+                if (busca) params.busca = busca;
+
+                const marcaId = document.getElementById('filterMarca').value;
+                if (marcaId) params.marca_id = marcaId;
+
+                const response = await API.listarProdutos(params);
+
+                if (response.status === 'sucesso') {
+                    produtos = response.dados || [];
+                    totalPaginas = response.paginacao?.total_paginas || 1;
+
+                    // Filtra por estoque se necessário
+                    const filterEstoque = document.getElementById('filterEstoque').value;
+                    if (filterEstoque) {
+                        produtos = filtrarPorEstoque(produtos, filterEstoque);
+                    }
+
+                    renderizarProdutos();
+                    atualizarInfo();
+                    renderizarPaginacao();
+                }
+            } catch (error) {
+                console.error('Erro ao carregar produtos:', error);
+                document.getElementById('productList').innerHTML =
+                    '<div class="alert alert-danger">Erro ao carregar produtos. Tente novamente.</div>';
+            } finally {
+                document.getElementById('loading').classList.add('d-none');
+            }
+        }
+
+        // === Busca com debounce ===
+        function buscarProdutos() {
+            clearTimeout(debounceTimer);
+            debounceTimer = setTimeout(() => {
+                paginaAtual = 1;
+                carregarProdutos();
+            }, 500);
+        }
+
+        // === Filtra produtos por estoque ===
+        function filtrarPorEstoque(lista, tipo) {
+            return lista.filter(prod => {
+                if (tipo === 'zero') return prod.estoque <= 0;
+                if (tipo === 'baixo') return prod.estoque > 0 && prod.estoque <= 5;
+                if (tipo === 'ok') return prod.estoque > 5;
+                return true;
+            });
+        }
+
+        // === Renderiza lista de produtos ===
+        function renderizarProdutos() {
+            const container = document.getElementById('productList');
+
+            if (!produtos.length) {
+                container.innerHTML = `
+                    <div class="text-center py-5">
+                        <i class="bi bi-inbox text-muted" style="font-size: 3rem;"></i>
+                        <p class="text-muted mt-3">Nenhum produto encontrado</p>
+                        <button class="btn btn-outline-primary" onclick="limparFiltros()">
+                            Limpar filtros
+                        </button>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = produtos.map(prod => {
+                const stockClass = prod.estoque <= 0 ? 'stock-zero' :
+                    prod.estoque <= 5 ? 'stock-low' : 'stock-ok';
+                const stockText = prod.estoque <= 0 ? 'Esgotado' :
+                    prod.estoque <= 5 ? `Baixo (${prod.estoque})` : `${prod.estoque} un.`;
+
+                return `
+                    <div class="product-card" onclick="selecionarProduto(${prod.id})">
+                        <div class="row align-items-center">
+                            <div class="col-md-8">
+                                <h5 class="mb-1">${prod.nome}</h5>
+                                <div class="text-muted small">
+                                    <i class="bi bi-tag"></i> SKU: ${prod.sku} | 
+                                    <i class="bi bi-building"></i> ${prod.marca_nome}
+                                </div>
+                            </div>
+                            <div class="col-md-2 text-center">
+                                <div class="price-tag">R$ ${parseFloat(prod.preco_venda).toFixed(2).replace('.', ',')}</div>
+                                <small class="text-muted">Preço de venda</small>
+                            </div>
+                            <div class="col-md-2 text-end">
+                                <span class="badge ${stockClass} stock-badge">${stockText}</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // === Seleciona produto e abre modal ===
+        async function selecionarProduto(id) {
+            try {
+                const response = await API.buscarProduto(id);
+                if (response.status === 'sucesso') {
+                    produtoSelecionado = response.dados;
+                    mostrarModalProduto(produtoSelecionado);
+                }
+            } catch (error) {
+                alert('Erro ao carregar detalhes do produto');
+            }
+        }
+
+        // === Mostra modal com detalhes (COM EDIÇÃO DE PREÇOS) ===
+        async function mostrarModalProduto(prod) {
+            // Busca resumo de movimentações
+            let resumo = { total_entradas: 0, total_saidas: 0, total_movimentacoes: 0 };
+            try {
+                const resp = await API.resumoMovimentacoes(prod.id);
+                if (resp.status === 'sucesso' && resp.dados) {
+                    resumo = resp.dados;
+                }
+            } catch (e) { /* ignora se der erro */ }
+
+            const stockClass = prod.estoque <= 0 ? 'text-danger' :
+                prod.estoque <= 5 ? 'text-warning' : 'text-success';
+            const stockText = prod.estoque <= 0 ? 'Esgotado' :
+                prod.estoque <= 5 ? `Baixo (${prod.estoque} un.)` : `${prod.estoque} unidades`;
+
+            // Calcula margem atual
+            const margemAtual = calcularMargem(prod.preco_custo, prod.preco_venda);
+
+            document.getElementById('modalTitle').textContent = prod.nome;
+            document.getElementById('modalBody').innerHTML = `
+        <div class="row">
+            <div class="col-md-6">
+                <h6 class="mb-3">Informações Básicas</h6>
+                <div class="detail-row">
+                    <div class="detail-label">SKU</div>
+                    <div>${prod.sku}</div>
+                </div>
+                <div class="detail-row">
+                    <div class="detail-label">Marca</div>
+                    <div>${prod.marca_nome}</div>
+                </div>
+                <div class="detail-row">
+                    <div class="detail-label">Estoque Atual</div>
+                    <div class="${stockClass} fw-bold fs-5">${stockText}</div>
+                </div>
+                <div class="detail-row">
+                    <div class="detail-label">Status</div>
+                    <div>${prod.ativo ? '<span class="badge bg-success">Ativo</span>' : '<span class="badge bg-secondary">Inativo</span>'}</div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <h6 class="mb-3">💰 Preços (Editável)</h6>
+                <div class="detail-row">
+                    <div class="detail-label">Preço de Custo</div>
+                    <div class="input-group input-group-sm">
+                        <span class="input-group-text">R$</span>
+                        <input type="number" class="form-control" id="editPrecoCusto" 
+                               value="${parseFloat(prod.preco_custo).toFixed(2)}" step="0.01" min="0">
+                    </div>
+                </div>
+                <div class="detail-row">
+                    <div class="detail-label">Preço de Venda</div>
+                    <div class="input-group input-group-sm">
+                        <span class="input-group-text">R$</span>
+                        <input type="number" class="form-control" id="editPrecoVenda" 
+                               value="${parseFloat(prod.preco_venda).toFixed(2)}" step="0.01" min="0">
+                    </div>
+                </div>
+                <div class="detail-row">
+                    <div class="detail-label">Margem de Lucro</div>
+                    <div class="fw-bold ${margemAtual < 20 ? 'text-danger' : margemAtual < 40 ? 'text-warning' : 'text-success'}" id="margemDisplay">
+                        ${margemAtual}%
+                    </div>
+                    <small class="text-muted">Lucro: R$ ${(prod.preco_venda - prod.preco_custo).toFixed(2).replace('.', ',')}</small>
+                </div>
+                <div class="mt-3">
+                    <button class="btn btn-primary btn-sm w-100" onclick="salvarPrecos(${prod.id})">
+                        <i class="bi bi-check-circle"></i> Salvar Preços
+                    </button>
+                </div>
+            </div>
+        </div>
+        <div class="row mt-3">
+            <div class="col-12">
+                <h6 class="mb-3">Resumo de Movimentações</h6>
+                <div class="row text-center">
+                    <div class="col-4">
+                        <div class="p-3 bg-light rounded">
+                            <div class="text-success fw-bold fs-4">+${resumo.total_entradas}</div>
+                            <small class="text-muted">Entradas</small>
+                        </div>
+                    </div>
+                    <div class="col-4">
+                        <div class="p-3 bg-light rounded">
+                            <div class="text-danger fw-bold fs-4">-${resumo.total_saidas}</div>
+                            <small class="text-muted">Saídas</small>
+                        </div>
+                    </div>
+                    <div class="col-4">
+                        <div class="p-3 bg-light rounded">
+                            <div class="text-primary fw-bold fs-4">${resumo.total_movimentacoes}</div>
+                            <small class="text-muted">Total</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="mt-3">
+            <small class="text-muted">
+                <i class="bi bi-clock"></i> Criado em: ${formatarData(prod.criado_em)}
+            </small>
+        </div>
+    `;
+
+            // Adiciona listeners para recalcular margem ao editar preços
+            document.getElementById('editPrecoCusto').addEventListener('input', calcularMargemAoEditar);
+            document.getElementById('editPrecoVenda').addEventListener('input', calcularMargemAoEditar);
+
+            const modal = new bootstrap.Modal(document.getElementById('productModal'));
+            modal.show();
+        }
+
+        // === Recalcula margem ao editar preços ===
+        function calcularMargemAoEditar() {
+            const custo = parseFloat(document.getElementById('editPrecoCusto').value) || 0;
+            const venda = parseFloat(document.getElementById('editPrecoVenda').value) || 0;
+            const margem = calcularMargem(custo, venda);
+            const lucro = venda - custo;
+
+            const display = document.getElementById('margemDisplay');
+            display.textContent = `${margem}% (Lucro: R$ ${lucro.toFixed(2).replace('.', ',')})`;
+            display.className = `fw-bold ${margem < 20 ? 'text-danger' : margem < 40 ? 'text-warning' : 'text-success'}`;
+        }
+
+        // === Salvar preços do produto ===
+        async function salvarPrecos(id) {
+            const precoCusto = parseFloat(document.getElementById('editPrecoCusto').value);
+            const precoVenda = parseFloat(document.getElementById('editPrecoVenda').value);
+
+            if (!precoCusto || !precoVenda) {
+                alert('Preencha ambos os preços');
+                return;
+            }
+
+            if (precoVenda < precoCusto) {
+                if (!confirm('Atenção: Preço de venda menor que custo! Deseja continuar?')) {
+                    return;
+                }
+            }
+
+            try {
+                document.getElementById('loading').classList.remove('d-none');
+
+                await API.atualizarProduto(id, { preco_custo: precoCusto, preco_venda: precoVenda });
+
+                alert('Preços atualizados com sucesso!');
+                bootstrap.Modal.getInstance(document.getElementById('productModal')).hide();
+
+                // Recarrega a lista para mostrar novo preço
+                carregarProdutos();
+            } catch (error) {
+                alert('Erro ao salvar preços: ' + error.message);
+            } finally {
+                document.getElementById('loading').classList.add('d-none');
+            }
+        }
+
+        // === Calcula margem de lucro ===
+        function calcularMargem(custo, venda) {
+            if (!custo || !venda || custo <= 0) return 0;
+            const margem = ((venda - custo) / venda) * 100;
+            return margem.toFixed(1);
+        }
+
+        // === Vai para PDV com produto selecionado ===
+        function irParaPDV() {
+            if (produtoSelecionado) {
+                window.location.href = `pdv.html?produto=${produtoSelecionado.id}`;
+            }
+        }
+
+        // === Renderiza paginação ===
+        function renderizarPaginacao() {
+            const nav = document.getElementById('pagination');
+            const list = document.getElementById('paginationList');
+
+            if (totalPaginas <= 1) {
+                nav.style.display = 'none';
+                return;
+            }
+
+            nav.style.display = 'block';
+            let html = '';
+
+            // Anterior
+            html += `
+                <li class="page-item ${paginaAtual === 1 ? 'disabled' : ''}">
+                    <a class="page-link" href="#" onclick="mudarPagina(${paginaAtual - 1}); return false;">
+                        <i class="bi bi-chevron-left"></i> Anterior
+                    </a>
+                </li>
+            `;
+
+            // Páginas
+            for (let i = 1; i <= totalPaginas; i++) {
+                if (i === 1 || i === totalPaginas || (i >= paginaAtual - 2 && i <= paginaAtual + 2)) {
+                    html += `
+                        <li class="page-item ${i === paginaAtual ? 'active' : ''}">
+                            <a class="page-link" href="#" onclick="mudarPagina(${i}); return false;">${i}</a>
+                        </li>
+                    `;
+                } else if (i === paginaAtual - 3 || i === paginaAtual + 3) {
+                    html += '<li class="page-item disabled"><span class="page-link">...</span></li>';
+                }
+            }
+
+            // Próxima
+            html += `
+                <li class="page-item ${paginaAtual === totalPaginas ? 'disabled' : ''}">
+                    <a class="page-link" href="#" onclick="mudarPagina(${paginaAtual + 1}); return false;">
+                        Próxima <i class="bi bi-chevron-right"></i>
+                    </a>
+                </li>
+            `;
+
+            list.innerHTML = html;
+        }
+
+        // === Muda página ===
+        function mudarPagina(pagina) {
+            if (pagina < 1 || pagina > totalPaginas) return;
+            paginaAtual = pagina;
+            carregarProdutos();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        // === Atualiza info de resultados ===
+        function atualizarInfo() {
+            const total = produtos.length;
+            document.getElementById('resultInfo').textContent =
+                `Exibindo ${total} produto${total !== 1 ? 's' : ''}`;
+        }
+
+        // === Limpa filtros ===
+        function limparFiltros() {
+            document.getElementById('searchInput').value = '';
+            document.getElementById('filterMarca').value = '';
+            document.getElementById('filterEstoque').value = '';
+            paginaAtual = 1;
+            carregarProdutos();
+        }
+
+        // === Formata data ===
+        function formatarData(timestamp) {
+            if (!timestamp) return '-';
+            const date = new Date(timestamp);
+            return date.toLocaleDateString('pt-BR') + ' ' +
+                date.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+        }
+    </script>
+</body>
+
+</html>

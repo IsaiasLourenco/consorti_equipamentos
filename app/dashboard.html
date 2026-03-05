@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Consorti - Dashboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="assets/css/style.css">
+    <style>
+        .sidebar {
+            min-height: 100vh;
+            background: linear-gradient(180deg, #0d6efd 0%, #0a58ca 100%);
+            color: white;
+        }
+
+        .sidebar .nav-link {
+            color: rgba(255, 255, 255, 0.9);
+            padding: 0.75rem 1rem;
+            border-radius: 0.5rem;
+            margin: 0.25rem 0;
+        }
+
+        .sidebar .nav-link:hover,
+        .sidebar .nav-link.active {
+            background: rgba(255, 255, 255, 0.15);
+            color: white;
+        }
+
+        .sidebar .nav-link i {
+            margin-right: 0.5rem;
+            width: 20px;
+            text-align: center;
+        }
+
+        .stat-card {
+            border-left: 4px solid #0d6efd;
+            transition: transform 0.2s;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-2px);
+        }
+
+        .stat-card.success {
+            border-left-color: #198754;
+        }
+
+        .stat-card.warning {
+            border-left-color: #ffc107;
+        }
+
+        .stat-card.danger {
+            border-left-color: #dc3545;
+        }
+
+        .stat-value {
+            font-size: 1.75rem;
+            font-weight: 700;
+        }
+
+        .stat-label {
+            color: #6c757d;
+            font-size: 0.875rem;
+        }
+
+        .quick-action {
+            text-align: center;
+            padding: 1.5rem;
+            border-radius: 0.75rem;
+            background: #f8f9fa;
+            text-decoration: none;
+            color: #212529;
+            transition: all 0.2s;
+            border: 1px solid #e9ecef;
+        }
+
+        .quick-action:hover {
+            background: #0d6efd;
+            color: white;
+            border-color: #0d6efd;
+        }
+
+        .quick-action i {
+            font-size: 2rem;
+            display: block;
+            margin-bottom: 0.5rem;
+        }
+
+        .table-stock td {
+            vertical-align: middle;
+        }
+
+        .badge-estoque {
+            font-size: 0.75rem;
+            padding: 0.35em 0.65em;
+        }
+
+        .badge-estoque-zero {
+            background: #dc3545;
+        }
+
+        .badge-estoque-baixo {
+            background: #ffc107;
+            color: #212529;
+        }
+
+        .badge-estoque-ok {
+            background: #198754;
+        }
+
+        #loading {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(255, 255, 255, 0.9);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Loading Overlay -->
+    <div id="loading">
+        <div class="text-center">
+            <div class="spinner-border text-primary" role="status"></div>
+            <p class="mt-2 mb-0">Carregando...</p>
+        </div>
+    </div>
+
+    <div class="container-fluid">
+        <div class="row">
+            <!-- Sidebar -->
+            <nav class="col-md-3 col-lg-2 d-md-block sidebar collapse show">
+                <div class="position-sticky pt-3 px-2">
+                    <div class="text-center mb-4 pb-3 border-bottom border-light">
+                        <i class="bi bi-box-seam" style="font-size: 2rem;"></i>
+                        <h5 class="mt-2 mb-0">Consorti</h5>
+                        <small class="text-white-50">Gestão Local</small>
+                    </div>
+
+                    <ul class="nav flex-column">
+                        <li class="nav-item">
+                            <a class="nav-link active" href="dashboard.html">
+                                <i class="bi bi-speedometer2"></i> Dashboard
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="estoque.html">
+                                <i class="bi bi-search"></i> Consultar Estoque
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="pdv.html">
+                                <i class="bi bi-cart"></i> PDV / Vendas
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="entrada.html">
+                                <i class="bi bi-arrow-down-circle"></i> Entrada de Estoque
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="relatorios.html">
+                                <i class="bi bi-bar-chart"></i> Relatórios
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="vendedores.html">
+                                <i class="bi bi-people"></i> Vendedores
+                            </a>
+                        </li>
+                        <li class="nav-item mt-4 pt-3 border-top border-light">
+                            <a class="nav-link" href="config.html">
+                                <i class="bi bi-gear"></i> Configurações
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link text-danger" href="#" onclick="Auth.logout(); return false;">
+                                <i class="bi bi-box-arrow-left"></i> Sair
+                            </a>
+                        </li>
+                    </ul>
+
+                    <div class="mt-4 px-2">
+                        <div class="card bg-white text-dark">
+                            <div class="card-body py-2 px-3">
+                                <small class="text-muted">Logado como:</small>
+                                <div id="userInfo" class="fw-semibold text-truncate"></div>
+                                <small class="text-muted" id="userNivel"></small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </nav>
+
+            <!-- Main Content -->
+            <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4 py-4">
+                <!-- Header -->
+                <div
+                    class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-3 mb-4 border-bottom">
+                    <h1 class="h3 mb-0">📊 Dashboard</h1>
+                    <div class="btn-toolbar">
+                        <span class="text-muted small" id="dataAtual"></span>
+                    </div>
+                </div>
+
+                <!-- Stats Cards -->
+                <div class="row g-3 mb-4" id="statsCards">
+                    <div class="col-md-3">
+                        <div class="card stat-card h-100">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between">
+                                    <div>
+                                        <p class="stat-label mb-1">Total de Produtos</p>
+                                        <p class="stat-value mb-0" id="totalProdutos">-</p>
+                                    </div>
+                                    <i class="bi bi-box-seam text-primary opacity-50" style="font-size: 2rem;"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card stat-card warning h-100">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between">
+                                    <div>
+                                        <p class="stat-label mb-1">Estoque Baixo</p>
+                                        <p class="stat-value mb-0 text-warning" id="estoqueBaixo">-</p>
+                                    </div>
+                                    <i class="bi bi-exclamation-triangle opacity-50" style="font-size: 2rem;"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card stat-card success h-100">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between">
+                                    <div>
+                                        <p class="stat-label mb-1">Vendas Hoje</p>
+                                        <p class="stat-value mb-0 text-success" id="vendasHoje">-</p>
+                                    </div>
+                                    <i class="bi bi-cart-check opacity-50" style="font-size: 2rem;"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card stat-card danger h-100">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between">
+                                    <div>
+                                        <p class="stat-label mb-1">Esgotados</p>
+                                        <p class="stat-value mb-0 text-danger" id="esgotados">-</p>
+                                    </div>
+                                    <i class="bi bi-x-circle opacity-50" style="font-size: 2rem;"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Quick Actions -->
+                <div class="row g-3 mb-4">
+                    <div class="col-12">
+                        <h6 class="text-muted mb-3">⚡ Ações Rápidas</h6>
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <a href="estoque.html" class="quick-action d-block">
+                            <i class="bi bi-search text-primary"></i>
+                            <strong>Consultar</strong>
+                            <div class="small text-muted">Produto no estoque</div>
+                        </a>
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <a href="pdv.html" class="quick-action d-block">
+                            <i class="bi bi-cart text-success"></i>
+                            <strong>Nova Venda</strong>
+                            <div class="small text-muted">Registrar saída</div>
+                        </a>
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <a href="entrada.html" class="quick-action d-block">
+                            <i class="bi bi-arrow-down text-info"></i>
+                            <strong>Entrada</strong>
+                            <div class="small text-muted">Registrar compra</div>
+                        </a>
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <a href="relatorios.html?tipo=estoque_baixo" class="quick-action d-block">
+                            <i class="bi bi-exclamation-triangle text-warning"></i>
+                            <strong>Estoque Crítico</strong>
+                            <div class="small text-muted">Ver lista completa</div>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Two Columns: Recent Movements + Low Stock -->
+                <div class="row g-4">
+                    <!-- Recent Movements -->
+                    <div class="col-lg-7">
+                        <div class="card h-100">
+                            <div class="card-header d-flex justify-content-between align-items-center">
+                                <span><i class="bi bi-clock-history"></i> Últimas Movimentações</span>
+                                <a href="relatorios.html?tipo=movimentacoes_usuario"
+                                    class="btn btn-sm btn-outline-secondary">Ver todas</a>
+                            </div>
+                            <div class="card-body p-0">
+                                <div class="table-responsive">
+                                    <table class="table table-hover table-stock mb-0">
+                                        <thead class="table-light">
+                                            <tr>
+                                                <th>Produto</th>
+                                                <th>Tipo</th>
+                                                <th>Qtd</th>
+                                                <th>Estoque</th>
+                                                <th>Hora</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="tabelaMovimentacoes">
+                                            <tr>
+                                                <td colspan="5" class="text-center text-muted py-4">Carregando...</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Low Stock Alert -->
+                    <div class="col-lg-5">
+                        <div class="card h-100">
+                            <div class="card-header d-flex justify-content-between align-items-center">
+                                <span><i class="bi bi-exclamation-triangle text-warning"></i> Estoque Baixo</span>
+                                <a href="relatorios.html?tipo=estoque_baixo" class="btn btn-sm btn-outline-warning">Ver
+                                    todos</a>
+                            </div>
+                            <div class="card-body p-0">
+                                <div class="list-group list-group-flush" id="listaEstoqueBaixo">
+                                    <div class="list-group-item text-center text-muted py-4">Carregando...</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="assets/js/api.js"></script>
+    <script src="assets/js/auth.js"></script>
+    <script>
+        // === Verifica autenticação ===
+        if (!Auth.requerLogin()) { /* já redirecionou */ }
+
+        // === Dados do usuário logado ===
+        document.addEventListener('DOMContentLoaded', () => {
+            const user = Auth.getUsuario();
+            if (user) {
+                document.getElementById('userInfo').textContent = user.nome;
+                document.getElementById('userNivel').textContent =
+                    user.nivel === 'admin' ? '👑 Administrador' :
+                        user.nivel === 'vendedor' ? '👤 Vendedor' : '👤 Cliente';
+            }
+
+            // Data atual
+            const hoje = new Date();
+            document.getElementById('dataAtual').textContent =
+                hoje.toLocaleDateString('pt-BR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+
+            // Carrega dados do dashboard
+            carregarDashboard();
+        });
+
+        // === Carrega todos os dados do dashboard ===
+        async function carregarDashboard() {
+            try {
+                // 1. Resumo geral de estoque
+                const resumo = await API.relatorio('resumo_estoque');
+                if (resumo.status === 'sucesso' && resumo.dados) {
+                    document.getElementById('totalProdutos').textContent = resumo.dados.total_produtos?.toLocaleString('pt-BR') || '0';
+                    document.getElementById('estoqueBaixo').textContent = resumo.dados.produtos_estoque_baixo?.toLocaleString('pt-BR') || '0';
+                    document.getElementById('esgotados').textContent = resumo.dados.produtos_esgotados?.toLocaleString('pt-BR') || '0';
+                }
+
+                // 2. Vendas de hoje
+                const hoje = new Date().toISOString().split('T')[0];
+                const vendas = await API.relatorio('receita_periodo', { data_inicio: hoje, data_fim: hoje });
+                if (vendas.status === 'sucesso' && vendas.dados) {
+                    document.getElementById('vendasHoje').textContent =
+                        (vendas.dados.total_vendas || 0).toLocaleString('pt-BR');
+                }
+
+                // 3. Últimas movimentações
+                const movimentacoes = await API.listarMovimentacoes({ limite: 10 });
+                renderizarMovimentacoes(movimentacoes.dados || []);
+
+                // 4. Produtos com estoque baixo
+                const estoqueBaixo = await API.relatorio('estoque_baixo', { minimo: 5 });
+                renderizarEstoqueBaixo(estoqueBaixo.dados || []);
+
+            } catch (error) {
+                console.error('Erro ao carregar dashboard:', error);
+                alert('Erro ao carregar dados. Verifique sua conexão.');
+            } finally {
+                document.getElementById('loading').classList.add('d-none');
+            }
+        }
+
+        // === Renderiza tabela de movimentações ===
+        function renderizarMovimentacoes(lista) {
+            const tbody = document.getElementById('tabelaMovimentacoes');
+
+            if (!lista.length) {
+                tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted py-4">Nenhuma movimentação recente</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = lista.map(mov => {
+                const badge = {
+                    'entrada': '<span class="badge bg-success">Entrada</span>',
+                    'saida': '<span class="badge bg-danger">Saída</span>',
+                    'ajuste': '<span class="badge bg-info text-dark">Ajuste</span>',
+                    'pedido': '<span class="badge bg-warning text-dark">Pedido</span>'
+                }[mov.tipo] || mov.tipo;
+
+                const estoqueClass = mov.estoque_atual <= 0 ? 'text-danger fw-bold' :
+                    mov.estoque_atual <= 5 ? 'text-warning fw-bold' : '';
+
+                return `
+                    <tr>
+                        <td><small class="d-block text-truncate" style="max-width: 180px;" title="${mov.produto_nome}">${mov.produto_nome}</small></td>
+                        <td>${badge}</td>
+                        <td class="${mov.tipo === 'saida' ? 'text-danger' : 'text-success'} fw-bold">
+                            ${mov.tipo === 'saida' ? '-' : '+'}${mov.quantidade}
+                        </td>
+                        <td class="${estoqueClass}">${mov.estoque_atual}</td>
+                        <td><small class="text-muted">${formatarHora(mov.criado_em)}</small></td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        // === Renderiza lista de estoque baixo ===
+        function renderizarEstoqueBaixo(lista) {
+            const container = document.getElementById('listaEstoqueBaixo');
+
+            if (!lista.length) {
+                container.innerHTML = '<div class="list-group-item text-center text-success py-4"><i class="bi bi-check-circle"></i> Tudo em ordem!</div>';
+                return;
+            }
+
+            container.innerHTML = lista.slice(0, 8).map(prod => {
+                const badge = prod.estoque <= 0 ? 'badge-estoque-zero' : 'badge-estoque-baixo';
+                const texto = prod.estoque <= 0 ? 'Esgotado' : `${prod.estoque} un.`;
+
+                return `
+                    <a href="estoque.html?busca=${encodeURIComponent(prod.sku)}" class="list-group-item list-group-item-action py-3">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div class="text-truncate me-3" style="max-width: 200px;">
+                                <strong class="d-block text-truncate">${prod.nome}</strong>
+                                <small class="text-muted">${prod.marca_nome}</small>
+                            </div>
+                            <span class="badge ${badge} badge-estoque">${texto}</span>
+                        </div>
+                    </a>
+                `;
+            }).join('');
+
+            if (lista.length > 8) {
+                container.innerHTML += `
+                    <a href="relatorios.html?tipo=estoque_baixo" class="list-group-item list-group-item-action text-center text-primary">
+                        + Ver mais ${lista.length - 8} produtos
+                    </a>
+                `;
+            }
+        }
+
+        // === Formata timestamp para hora (HH:MM) ===
+        function formatarHora(timestamp) {
+            if (!timestamp) return '-';
+            const date = new Date(timestamp);
+            return date.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+        }
+    </script>
+</body>
+
+</html>

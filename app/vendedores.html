@@ -1,0 +1,281 @@
+< !DOCTYPE html>
+    <html lang="pt-BR">
+
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Consorti - Vendedores</title>
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+        <link rel="stylesheet" href="assets/css/style.css">
+        <style>
+            .sidebar {
+                min - height: 100vh;
+                background: linear-gradient(180deg, #0d6efd 0%, #0a58ca 100%);
+                color: white;
+            }
+
+            .sidebar .nav-link {
+                color: rgba(255, 255, 255, 0.9);
+                padding: 0.75rem 1rem;
+                border-radius: 0.5rem;
+                margin: 0.25rem 0;
+            }
+
+            .sidebar .nav-link:hover,
+            .sidebar .nav-link.active {
+                background: rgba(255, 255, 255, 0.15);
+                color: white;
+            }
+
+            .sidebar .nav-link i {
+                margin - right: 0.5rem;
+                width: 20px;
+                text-align: center;
+            }
+
+            #loading {
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background: rgba(255, 255, 255, 0.9);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                z-index: 9999;
+            }
+        </style>
+    </head>
+
+    <body>
+        <div id="loading">
+            <div class="text-center">
+                <div class="spinner-border text-primary" role="status"></div>
+                <p class="mt-2 mb-0">Carregando...</p>
+            </div>
+        </div>
+
+        <div class="container-fluid">
+            <div class="row">
+                <nav class="col-md-3 col-lg-2 d-md-block sidebar collapse show">
+                    <div class="position-sticky pt-3 px-2">
+                        <div class="text-center mb-4 pb-3 border-bottom border-light">
+                            <i class="bi bi-box-seam" style="font-size: 2rem;"></i>
+                            <h5 class="mt-2 mb-0">Consorti</h5>
+                            <small class="text-white-50">Gestão Local</small>
+                        </div>
+                        <ul class="nav flex-column">
+                            <li class="nav-item"><a class="nav-link" href="dashboard.html"><i
+                                        class="bi bi-speedometer2"></i> Dashboard</a></li>
+                            <li class="nav-item"><a class="nav-link" href="estoque.html"><i class="bi bi-search"></i>
+                                    Consultar Estoque</a></li>
+                            <li class="nav-item"><a class="nav-link" href="pdv.html"><i class="bi bi-cart"></i> PDV /
+                                    Vendas</a></li>
+                            <li class="nav-item"><a class="nav-link" href="entrada.html"><i
+                                        class="bi bi-arrow-down-circle"></i> Entrada de Estoque</a></li>
+                            <li class="nav-item"><a class="nav-link" href="relatorios.html"><i
+                                        class="bi bi-bar-chart"></i> Relatórios</a></li>
+                            <li class="nav-item"><a class="nav-link active" href="vendedores.html"><i
+                                        class="bi bi-people"></i> Vendedores</a></li>
+                            <li class="nav-item mt-4 pt-3 border-top border-light"><a class="nav-link"
+                                    href="config.html"><i class="bi bi-gear"></i> Configurações</a></li>
+                            <li class="nav-item"><a class="nav-link text-danger" href="#"
+                                    onclick="Auth.logout(); return false;"><i class="bi bi-box-arrow-left"></i> Sair</a>
+                            </li>
+                        </ul>
+                        <div class="mt-4 px-2">
+                            <div class="card bg-white text-dark">
+                                <div class="card-body py-2 px-3"><small class="text-muted">Logado como:</small>
+                                    <div id="userInfo" class="fw-semibold text-truncate"></div><small class="text-muted"
+                                        id="userNivel"></small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </nav>
+
+                <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4 py-4">
+                    <div
+                        class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-3 mb-4 border-bottom">
+                        <h1 class="h3 mb-0">👥 Vendedores</h1>
+                        <button class="btn btn-sm btn-primary no-print" onclick="mostrarModalUsuario()"><i
+                                class="bi bi-plus-circle"></i> Novo Usuário</button>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header"><i class="bi bi-people"></i> Lista de Usuários</div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-hover">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>Nome</th>
+                                            <th>E-mail</th>
+                                            <th>Nível</th>
+                                            <th>Status</th>
+                                            <th>Ações</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="tabelaUsuarios"></tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </main>
+            </div>
+        </div>
+
+        <!-- Modal Usuario -->
+        <div class="modal fade" id="usuarioModal" tabindex="-1">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="modalTitulo">Novo Usuário</h5><button type="button"
+                            class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <input type="hidden" id="usuarioId">
+                        <div class="mb-3"><label class="form-label">Nome</label><input type="text" class="form-control"
+                                id="usuarioNome" required></div>
+                        <div class="mb-3"><label class="form-label">E-mail</label><input type="email"
+                                class="form-control" id="usuarioEmail" required></div>
+                        <div class="mb-3"><label class="form-label">Senha</label><input type="password"
+                                class="form-control" id="usuarioSenha" placeholder="Deixe em branco para manter"></div>
+                        <div class="mb-3"><label class="form-label">Nível</label>
+                            <select class="form-select" id="usuarioNivel">
+                                <option value="cliente">Cliente</option>
+                                <option value="vendedor">Vendedor</option>
+                                <option value="admin">Administrador</option>
+                            </select>
+                        </div>
+                        <div class="mb-3"><label class="form-label">Status</label>
+                            <select class="form-select" id="usuarioAtivo">
+                                <option value="1">Ativo</option>
+                                <option value="0">Inativo</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="button" class="btn btn-primary" onclick="salvarUsuario()">Salvar</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+        <script src="assets/js/api.js"></script>
+        <script src="assets/js/auth.js"></script>
+        <script>
+            if (!Auth.requerLogin()) { }
+            let modalUsuario = null;
+
+            document.addEventListener('DOMContentLoaded', () => {
+                document.getElementById('loading').classList.add('d-none');
+                const user = Auth.getUsuario();
+                if (user) {
+                    document.getElementById('userInfo').textContent = user.nome;
+                    document.getElementById('userNivel').textContent = user.nivel === 'admin' ? '👑 Administrador' : user.nivel === 'vendedor' ? '👤 Vendedor' : '👤 Cliente';
+                }
+                if (user.nivel !== 'admin') {
+                    document.querySelector('.btn-primary').style.display = 'none';
+                }
+                carregarUsuarios();
+                modalUsuario = new bootstrap.Modal(document.getElementById('usuarioModal'));
+            });
+
+            async function carregarUsuarios() {
+                try {
+                    const response = await API.listarUsuarios();
+                    if (response.status === 'sucesso') renderizarTabela(response.dados || []);
+                } catch (error) {
+                    document.getElementById('tabelaUsuarios').innerHTML = '<tr><td colspan="5" class="text-center text-danger">Erro ao carregar usuários</td></tr>';
+                }
+            }
+
+            function renderizarTabela(usuarios) {
+                const tbody = document.getElementById('tabelaUsuarios');
+                if (!usuarios.length) { tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted">Nenhum usuário encontrado</td></tr>'; return; }
+                tbody.innerHTML = usuarios.map(u => `
+                                    <tr>
+                                        <td>${u.nome}</td>
+                                        <td>${u.email}</td>
+                                        <td><span class="badge ${u.nivel === 'admin' ? 'bg-danger' : u.nivel === 'vendedor' ? 'bg-primary' : 'bg-secondary'}">${u.nivel}</span></td>
+                                        <td><span class="badge ${u.ativo ? 'bg-success' : 'bg-secondary'}">${u.ativo ? 'Ativo' : 'Inativo'}</span></td>
+                                        <td>
+                                            <button class="btn btn-sm btn-outline-primary" onclick="editarUsuario(${u.id})"><i class="bi bi-pencil"></i></button>
+                                            ${u.id !== Auth.getUsuario().id ? `<button class="btn btn-sm btn-outline-danger" onclick="excluirUsuario(${u.id})"><i class="bi bi-trash"></i></button>` : ''}
+                                        </td>
+                                    </tr>
+                                    `).join('');
+            }
+
+            function mostrarModalUsuario() {
+                document.getElementById('modalTitulo').textContent = 'Novo Usuário';
+                document.getElementById('usuarioId').value = '';
+                document.getElementById('usuarioNome').value = '';
+                document.getElementById('usuarioEmail').value = '';
+                document.getElementById('usuarioSenha').value = '';
+                document.getElementById('usuarioNivel').value = 'cliente';
+                document.getElementById('usuarioAtivo').value = '1';
+                modalUsuario.show();
+            }
+
+            async function editarUsuario(id) {
+                try {
+                    const response = await API.buscarUsuario(id);
+                    if (response.status === 'sucesso') {
+                        const u = response.dados;
+                        document.getElementById('modalTitulo').textContent = 'Editar Usuário';
+                        document.getElementById('usuarioId').value = u.id;
+                        document.getElementById('usuarioNome').value = u.nome;
+                        document.getElementById('usuarioEmail').value = u.email;
+                        document.getElementById('usuarioSenha').value = '';
+                        document.getElementById('usuarioNivel').value = u.nivel;
+                        document.getElementById('usuarioAtivo').value = u.ativo;
+                        modalUsuario.show();
+                    }
+                } catch (error) { alert('Erro ao carregar usuário'); }
+            }
+
+            async function salvarUsuario() {
+                const id = document.getElementById('usuarioId').value;
+                const dados = {
+                    nome: document.getElementById('usuarioNome').value,
+                    email: document.getElementById('usuarioEmail').value,
+                    nivel: document.getElementById('usuarioNivel').value,
+                    ativo: parseInt(document.getElementById('usuarioAtivo').value)
+                };
+                const senha = document.getElementById('usuarioSenha').value;
+                if (senha) dados.senha = senha;
+
+                if (!dados.nome || !dados.email) { alert('Preencha nome e e-mail'); return; }
+
+                try {
+                    if (id) {
+                        await API.atualizarUsuario(id, dados);
+                        alert('Usuário atualizado!');
+                    } else {
+                        if (!senha) { alert('Senha obrigatória para novo usuário'); return; }
+                        await API.criarUsuario(dados);
+                        alert('Usuário criado!');
+                    }
+                    modalUsuario.hide();
+                    carregarUsuarios();
+                } catch (error) { alert('Erro: ' + error.message); }
+            }
+
+            async function excluirUsuario(id) {
+                if (!confirm('Tem certeza que deseja excluir este usuário?')) return;
+                try {
+                    await API.excluirUsuario(id);
+                    alert('Usuário excluído!');
+                    carregarUsuarios();
+                } catch (error) { alert('Erro: ' + error.message); }
+            }
+        </script>
+    </body>
+
+    </html>

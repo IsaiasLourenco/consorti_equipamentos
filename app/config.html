@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Consorti - Configurações</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="assets/css/style.css">
+    <style>
+        .sidebar {
+            min-height: 100vh;
+            background: linear-gradient(180deg, #0d6efd 0%, #0a58ca 100%);
+            color: white;
+        }
+
+        .sidebar .nav-link {
+            color: rgba(255, 255, 255, 0.9);
+            padding: 0.75rem 1rem;
+            border-radius: 0.5rem;
+            margin: 0.25rem 0;
+        }
+
+        .sidebar .nav-link:hover,
+        .sidebar .nav-link.active {
+            background: rgba(255, 255, 255, 0.15);
+            color: white;
+        }
+
+        .sidebar .nav-link i {
+            margin-right: 0.5rem;
+            width: 20px;
+            text-align: center;
+        }
+
+        #loading {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(255, 255, 255, 0.9);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="loading">
+        <div class="text-center">
+            <div class="spinner-border text-primary" role="status"></div>
+            <p class="mt-2 mb-0">Carregando...</p>
+        </div>
+    </div>
+
+    <div class="container-fluid">
+        <div class="row">
+            <nav class="col-md-3 col-lg-2 d-md-block sidebar collapse show">
+                <div class="position-sticky pt-3 px-2">
+                    <div class="text-center mb-4 pb-3 border-bottom border-light">
+                        <i class="bi bi-box-seam" style="font-size: 2rem;"></i>
+                        <h5 class="mt-2 mb-0">Consorti</h5>
+                        <small class="text-white-50">Gestão Local</small>
+                    </div>
+                    <ul class="nav flex-column">
+                        <li class="nav-item"><a class="nav-link" href="dashboard.html"><i
+                                    class="bi bi-speedometer2"></i> Dashboard</a></li>
+                        <li class="nav-item"><a class="nav-link" href="estoque.html"><i class="bi bi-search"></i>
+                                Consultar Estoque</a></li>
+                        <li class="nav-item"><a class="nav-link" href="pdv.html"><i class="bi bi-cart"></i> PDV /
+                                Vendas</a></li>
+                        <li class="nav-item"><a class="nav-link" href="entrada.html"><i
+                                    class="bi bi-arrow-down-circle"></i> Entrada de Estoque</a></li>
+                        <li class="nav-item"><a class="nav-link" href="relatorios.html"><i class="bi bi-bar-chart"></i>
+                                Relatórios</a></li>
+                        <li class="nav-item"><a class="nav-link" href="vendedores.html"><i class="bi bi-people"></i>
+                                Vendedores</a></li>
+                        <li class="nav-item mt-4 pt-3 border-top border-light"><a class="nav-link active"
+                                href="config.html"><i class="bi bi-gear"></i> Configurações</a></li>
+                        <li class="nav-item"><a class="nav-link text-danger" href="#"
+                                onclick="Auth.logout(); return false;"><i class="bi bi-box-arrow-left"></i> Sair</a>
+                        </li>
+                    </ul>
+                    <div class="mt-4 px-2">
+                        <div class="card bg-white text-dark">
+                            <div class="card-body py-2 px-3"><small class="text-muted">Logado como:</small>
+                                <div id="userInfo" class="fw-semibold text-truncate"></div><small class="text-muted"
+                                    id="userNivel"></small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </nav>
+
+            <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4 py-4">
+                <div
+                    class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-3 mb-4 border-bottom">
+                    <h1 class="h3 mb-0">⚙️ Configurações</h1>
+                </div>
+
+                <div class="row g-4">
+                    <div class="col-md-6">
+                        <div class="card">
+                            <div class="card-header"><i class="bi bi-person"></i> Minha Conta</div>
+                            <div class="card-body">
+                                <div class="mb-3"><label class="form-label">Nome</label><input type="text"
+                                        class="form-control" id="meuNome" readonly></div>
+                                <div class="mb-3"><label class="form-label">E-mail</label><input type="email"
+                                        class="form-control" id="meuEmail" readonly></div>
+                                <div class="mb-3"><label class="form-label">Nível</label><input type="text"
+                                        class="form-control" id="meuNivel" readonly></div>
+                                <button class="btn btn-outline-primary"
+                                    onclick="alert('Funcionalidade de edição em desenvolvimento')"><i
+                                        class="bi bi-pencil"></i> Editar Dados</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <div class="card">
+                            <div class="card-header"><i class="bi bi-shield-lock"></i> Segurança</div>
+                            <div class="card-body">
+                                <div class="mb-3"><label class="form-label">Nova Senha</label><input type="password"
+                                        class="form-control" id="novaSenha"
+                                        placeholder="Deixe em branco para não alterar"></div>
+                                <div class="mb-3"><label class="form-label">Confirmar Senha</label><input
+                                        type="password" class="form-control" id="confirmarSenha"></div>
+                                <button class="btn btn-primary" onclick="mudarSenha()"><i class="bi bi-key"></i> Alterar
+                                    Senha</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <div class="card">
+                            <div class="card-header"><i class="bi bi-info-circle"></i> Sistema</div>
+                            <div class="card-body">
+                                <p><strong>Versão:</strong> 1.0.0</p>
+                                <p><strong>Última atualização:</strong> 2026</p>
+                                <p><strong>Banco de dados:</strong> Local (MySQL)</p>
+                                <p><strong>Total de produtos:</strong> <span id="totalProdutos">-</span></p>
+                                <p><strong>Total de marcas:</strong> <span id="totalMarcas">-</span></p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <div class="card">
+                            <div class="card-header"><i class="bi bi-download"></i> Backup</div>
+                            <div class="card-body">
+                                <p class="text-muted small">Exporte os dados do sistema para backup.</p>
+                                <button class="btn btn-outline-success"
+                                    onclick="alert('Funcionalidade de exportação em desenvolvimento')"><i
+                                        class="bi bi-file-earmark-spreadsheet"></i> Exportar Produtos (CSV)</button>
+                                <button class="btn btn-outline-warning"
+                                    onclick="alert('Funcionalidade de exportação em desenvolvimento')"><i
+                                        class="bi bi-file-earmark-spreadsheet"></i> Exportar Movimentações
+                                    (CSV)</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-12">
+                        <div class="card border-danger">
+                            <div class="card-header bg-danger text-white"><i class="bi bi-exclamation-triangle"></i>
+                                Zona de Perigo</div>
+                            <div class="card-body">
+                                <p class="text-danger">Atenção: Estas ações não podem ser desfeitas!</p>
+                                <button class="btn btn-outline-danger"
+                                    onclick="if(confirm('Tem certeza? Isso apagará TODOS os dados!')) alert('Funcionalidade desabilitada em produção')"><i
+                                        class="bi bi-trash"></i> Limpar Todo o Banco de Dados</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="assets/js/api.js"></script>
+    <script src="assets/js/auth.js"></script>
+    <script>
+        if (!Auth.requerLogin()) { }
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            document.getElementById('loading').classList.add('d-none');
+            const user = Auth.getUsuario();
+            if (user) {
+                document.getElementById('userInfo').textContent = user.nome;
+                document.getElementById('userNivel').textContent = user.nivel === 'admin' ? '👑 Administrador' : user.nivel === 'vendedor' ? '👤 Vendedor' : '👤 Cliente';
+                document.getElementById('meuNome').value = user.nome;
+                document.getElementById('meuEmail').value = user.email;
+                document.getElementById('meuNivel').value = user.nivel;
+            }
+
+            // Carrega stats do sistema
+            try {
+                const resumo = await API.relatorio('resumo_estoque');
+                if (resumo.status === 'sucesso') {
+                    document.getElementById('totalProdutos').textContent = resumo.dados?.total_produtos || '-';
+                }
+                const marcas = await API.listarMarcas();
+                if (marcas.status === 'sucesso') {
+                    document.getElementById('totalMarcas').textContent = marcas.total || '-';
+                }
+            } catch (error) { console.error('Erro ao carregar stats:', error); }
+        });
+
+        async function mudarSenha() {
+            const nova = document.getElementById('novaSenha').value;
+            const confirmar = document.getElementById('confirmarSenha').value;
+
+            if (!nova) { alert('Digite a nova senha'); return; }
+            if (nova !== confirmar) { alert('As senhas não conferem'); return; }
+            if (nova.length < 4) { alert('Senha muito curta (mínimo 4 caracteres)'); return; }
+
+            // Como não temos endpoint de mudar senha, simulamos
+            alert('Funcionalidade de mudança de senha em desenvolvimento.\n\nPara mudar a senha agora, use o phpMyAdmin ou crie um endpoint PUT /usuarios/:id/senha na API.');
+        }
+    </script>
+</body>
+
+</html>
